@@ -22,45 +22,57 @@ import os
 from math import ceil
 from termcolor import colored
 
+# These are just the characters
+# that get colored when displaying the cube
+tileChar     ='   '
+tileCharReal =' + '
+
+# Tile -> Color
+colorDict = {
+    ' W ' : 'white',
+    ' G ' : 'green',
+    ' B ' : 'blue',
+    ' R ' : 'red',
+    ' O ' : 'magenta',
+    ' Y ' : 'yellow',
+}
+# Face Character -> Face Name
+faceDict = {
+    'f' : 'Front',
+    'r' : 'Right',
+    'l' : 'Left',
+    'u' : 'Up',
+    'd' : 'Down',
+    'b' : 'Back',
+}
+# Tile -> Vector Representation
+# (Used for order >= 3)
+# (2x2x2 uses relative bit
+# generation to create simpler
+# datasets.)
+tileDict = {
+    ' R ' : [0,0,1],
+    ' O ' : [0,1,0],
+    ' Y ' : [0,1,1],
+    ' G ' : [1,0,0],
+    ' B ' : [1,0,1],
+    ' W ' : [1,1,0],
+}
+
+# Tile -> One-Hot Vector Representation
+tileDictOneHot = {
+    ' R ' : [1,0,0,0,0,0],
+    ' O ' : [0,1,0,0,0,0],
+    ' Y ' : [0,0,1,0,0,0],
+    ' G ' : [0,0,0,1,0,0],
+    ' B ' : [0,0,0,0,1,0],
+    ' W ' : [0,0,0,0,0,1],
+}
+
+
 # This is the cube class. It can generalize
 # and create any N-Order puzzle Cube.
 class Cube:    
-
-    # These are just the characters
-    # that get colored when displaying the cube
-    tileChar     ='   '
-    tileCharReal =' + '
-    # Tile -> Color
-    colorDict = {
-        ' W ' : 'white',
-        ' G ' : 'green',
-        ' B ' : 'blue',
-        ' R ' : 'red',
-        ' O ' : 'magenta',
-        ' Y ' : 'yellow',
-    }
-    # Face Character -> Face Name
-    faceDict = {
-        'f' : 'Front',
-        'r' : 'Right',
-        'l' : 'Left',
-        'u' : 'Up',
-        'd' : 'Down',
-        'b' : 'Back',
-    }
-    # Tile -> Vector Representation
-    # (Used for order >= 3)
-    # (2x2x2 uses relative bit
-    # generation to create simpler
-    # datasets.)
-    tileDict = {
-        ' R ' : [0,0,1],
-        ' O ' : [0,1,0],
-        ' Y ' : [0,1,1],
-        ' G ' : [1,0,0],
-        ' B ' : [1,0,1],
-        ' W ' : [1,1,0],
-    }
 
     # Define all the faces.
     def __init__(self, order):
@@ -78,11 +90,11 @@ class Cube:
         # Display the Top Portion
         for i in range(self.order):
             for j in range(self.order):
-                sys.stdout.write(self.tileChar)
+                sys.stdout.write(tileChar)
             for tile in self.up[i]:
                 sys.stdout.write(self.getTileColor(tile[:],isColor))
             for j in range(self.order*2):
-                sys.stdout.write(self.tileChar)
+                sys.stdout.write(tileChar)
             sys.stdout.write('\n')
         # Display the middle section
         for i in range(self.order):
@@ -98,17 +110,17 @@ class Cube:
         # Display the Bottom Section
         for i in range(self.order):
             for j in range(self.order):
-                sys.stdout.write(self.tileChar)
+                sys.stdout.write(tileChar)
             for tile in self.down[i]:
                 sys.stdout.write(self.getTileColor(tile[:],isColor))
             for j in range(self.order*2):
-                sys.stdout.write(self.tileChar)
+                sys.stdout.write(tileChar)
             sys.stdout.write('\n')
         sys.stdout.write('\n')
 
     def getTileColor(self, tile, isColor=False):
         if isColor:
-            tile = colored(Cube.tileCharReal, Cube.colorDict[tile],
+            tile = colored(tileCharReal, colorDict[tile],
                            attrs=['reverse'])
         return tile
 
@@ -326,8 +338,8 @@ class Cube:
                 self.rotateAlongAxis(command, inv)
                 inv = False
                 lay = 0
-            elif command in Cube.faceDict.keys():
-                self.rotateFaceReal(face=Cube.faceDict[command],layer=lay,inverse=inv)
+            elif command in faceDict.keys():
+                self.rotateFaceReal(face=faceDict[command],layer=lay,inverse=inv)
                 inv = False
                 lay = 0
 
@@ -379,7 +391,7 @@ class Cube:
                                 tileDictOrdTwo[faceTile] = temp
                                 vector.extend(temp)
                         else:
-                            vector.extend(self.tileDict[faceTile])
+                            vector.extend(tileDict[faceTile])
                     else:
                         vector.append(faceTile.split()[0])
         return vector

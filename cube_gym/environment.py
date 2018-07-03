@@ -36,8 +36,9 @@ class CubeEnv(gym.Env):
     """
 
     def __init__(self, order, reward_type='sparse', scramble_type='static',
-                 scramble_depth=3, max_steps=10):
+                 scramble_depth=4, max_steps=10):
 
+        self.order = order
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
         # as functions of the other moves) and 6 orientation moves.
         if order <= 3:
@@ -92,7 +93,7 @@ class CubeEnv(gym.Env):
         reward, rdone = self.reward_function()
         done = (self.steps > self.max_steps) or rdone
         
-        img = self._genImgState()
+        img = self._genImgStateOneHot()
 
         return img, reward, done, {}
 
@@ -109,8 +110,46 @@ class CubeEnv(gym.Env):
             for _ in range(scramble):
                 self.cube.minimalInterpreter(self.action_list[self.action_space.sample()])
 
-        return self._genImgState()
+        return self._genImgStateOneHot()
 
     # Render the environment
     def render(self):
         self.cube.displayCube(isColor=True)
+
+    # Generate the image state in the one hot format (6 Channels)
+    def _genImgStateOneHot(self):
+        state = np.zeros(self.observation_space.shape)
+        # Unfortunetly, we need to loop through every face to get construct this matrix
+
+        # Up
+        for i in range(self.order):
+            for j in range(self.order):
+                state[i][j + self.order] = cg.tileDictOneHot[self.cube.up[i][j]]
+
+        # Left
+        for i in range(self.order):
+            for j in range(self.order):
+                state[i + self.order][j] = cg.tileDictOneHot[self.cube.left[i][j]]
+        
+        # Front
+        for i in range(self.order):
+            for j in range(self.order):
+                state[i + self.order][j + self.order] = cg.tileDictOneHot[self.cube.front[i][j]]
+        
+        # Right
+        for i in range(self.order):
+            for j in range(self.order):
+                state[i + self.order][j + 2*self.order] = cg.tileDictOneHot[self.cube.right[i][j]]
+        
+        # Back
+        for i in range(self.order):
+            for j in range(self.order):
+                state[i + self.order][j + 3*self.order] = cg.tileDictOneHot[self.cube.back[i][j]]
+        
+        # Down
+        for i in range(self.order):
+            for j in range(self.order):
+                state[i + 2*self.order][j + self.order] = cg.tileDictOneHot[self.cube.down[i][j]]
+
+        return state
+
