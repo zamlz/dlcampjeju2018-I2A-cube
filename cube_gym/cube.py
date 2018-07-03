@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 #            _                        
 #  ___ _   _| |__   ___   _ __  _   _ 
@@ -108,7 +109,7 @@ class Cube:
     def getTileColor(self, tile, isColor=False):
         if isColor:
             tile = colored(Cube.tileCharReal, Cube.colorDict[tile],
-                           attrs=['reverse','blink'])
+                           attrs=['reverse'])
         return tile
 
     # takes a face character and rotates it in a given direction
@@ -401,6 +402,10 @@ class Cube:
                     if face[i][j] != face[0][0]:
                         return False
         return True
+
+    # Reset the cube to solved
+    def restoreSolvedState(self):
+        self.__init__(self.order)
 
 
 # A useful clearscreen function
