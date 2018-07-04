@@ -35,22 +35,31 @@ class CubeEnv(gym.Env):
                           before the environment resets
     """
 
-    def __init__(self, order, reward_type='sparse', scramble_type='static',
-                 scramble_depth=4, max_steps=10):
-
+    def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3):
+        
         self.order = order
+        self._refreshScrambleParameters(scramble_depth, max_steps)
+
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
         # as functions of the other moves) and 6 orientation moves.
         if order <= 3:
-            self.action_list = [
-            # Clockwise face turns
-            'r','l','u','d','f','b',
-            # Counter-Clockwise face turns
-            '.r','.l','.u','.d','.f','.b',
-            # Orientation Manipulation
-            'x', 'y', 'z', '.x', '.y', '.z',
+
+            self.face_action_list = [
+                # Clockwise face turns
+                'r','l','u','d','f','b',
+                # Counter-Clockwise face turns
+                '.r','.l','.u','.d','.f','.b',
             ]
+
+            self.orient_action_list = [
+                # Orientation Manipulation
+                'x', 'y', 'z', '.x', '.y', '.z',
+            ]
+
+            self.action_list = self.face_action_list + self.orient_action_list
             self.action_space = spaces.Discrete(len(self.action_list))
+            self.scramble_space = spaces.Discrete(len(self.face_action_list))
+
         else:
             raise NotImplemented('Generation of Action Space past order 3 is not implemented')
 
@@ -66,13 +75,35 @@ class CubeEnv(gym.Env):
         }
         self.reward_function = reward_funcs[reward_type]
 
-        self.scramble_depth = scramble_depth
         self.steps = 0
         self.cube = cg.Cube(order=order)
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+    # You can update the parameters of scrambling and max_steps
+    # String inputs are of the form 'initial:final:episodes'
+    # Otherwise you can provide a constant input,
+    # Why is this a seperate function? So you may control these parameters
+    # even after you've initialized the environment
+    def _refreshScrambleParameters(self, scramble_depth='1:4:10', max_steps='10:20:10'):
+        self.scramble_update = 0
+        self.max_steps_update = 0
+    
+        if type(scramble_depth) is str: 
+            scramlist = [ int(x) for x in scramble_depth.split(':') ]
+            self.scramble_update = float((scramlist[1] - scramlist[0]) / scramlist[2])
+            scramble_depth = scramlist[0]
+       
+        if type(max_steps) is str:
+            stepslist = [ int(x) for x in max_steps.split(':') ]
+            self.max_steps_update = float((stepslist[1] - stepslist[0]) / stepslist[2])
+            max_steps = stepslist[0]
+
+        self.scramble_depth = int(scramble_depth)
+        self.max_steps = int(max_steps)
+        
 
     # -------------------- Reward Functions ---------------------------------
     # all reward functions should specify if the environment is done or not
@@ -91,7 +122,7 @@ class CubeEnv(gym.Env):
         self.cube.minimalInterpreter(self.action_list[action])
         
         reward, rdone = self.reward_function()
-        done = (self.steps > self.max_steps) or rdone
+        done = (self.steps > int(self.max_steps)) or rdone
         
         img = self._genImgStateOneHot()
 
@@ -101,14 +132,18 @@ class CubeEnv(gym.Env):
     def reset(self, *args, **kwargs):
         self.cube.restoreSolvedState()
 
-        if self.scramble_depth:
-            scramble = self.scramble_depth
+        self.scramble_depth += self.scramble_update
+        scramble = int(self.scramble_depth)
+        self.max_steps += self.max_steps_update
+        self.steps = 0
 
         # Perform some env scrambling here
         while self.cube.isSolved():
             # Keep attempting scrambles until we don't end up in a solved state
+            scramble_actions = []
             for _ in range(scramble):
-                self.cube.minimalInterpreter(self.action_list[self.action_space.sample()])
+                scramble_actions.append(self.face_action_list[self.scramble_space.sample()])
+                self.cube.minimalInterpreter(scramble_actions[-1])
 
         return self._genImgStateOneHot()
 
