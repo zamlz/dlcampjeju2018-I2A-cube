@@ -188,3 +188,28 @@ class CubeEnv(gym.Env):
 
         return state
 
+
+# This function is used to convert the 6-channel representation to 3 channel rgb representation
+def onehotToRGB(obs):
+    height, width, _ = obs.shape
+    rgb = np.zeros((height, width, 3), dtype=np.float32)
+
+    for i in range(height):
+        for j in range(width):
+            
+            if   obs[i, j, 0]:
+                rgb[i, j] = [0, 0, 1]
+            elif obs[i, j, 1]:
+                rgb[i, j] = [0, 1, 0]
+            elif obs[i, j, 2]:
+                rgb[i, j] = [0, 1, 1]
+            elif obs[i, j, 3]:
+                rgb[i, j] = [1, 0, 0]
+            elif obs[i, j, 4]:
+                rgb[i, j] = [1, 0, 1]
+            elif obs[i, j, 5]:
+                rgb[i, j] = [1, 1, 0]
+            else:
+                rgb[i, j] = [0, 0, 0]
+
+    return rgb
