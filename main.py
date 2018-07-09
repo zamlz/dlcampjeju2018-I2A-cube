@@ -1,13 +1,18 @@
 
+import gym
 import a2c
 import cube_gym
 from policy import *
 
+def cube_env_simple():
+    env = gym.make('cube-x2-v0')
+    env.unwrapped._refreshScrambleParameters(1, 10)
+    return env
 
-a2c.train(env_id='cube-x2-v0',
+a2c.train(env_fn=cube_env_simple,
           policy=CnnPolicy,
-          nenvs=16,
-          nsteps=5,
+          nenvs=4,
+          nsteps=100,
           max_iterations=1e4,
           gamma=0.99,
           vf_coeff = 0.5,

@@ -58,7 +58,8 @@ class CubeEnv(gym.Env):
 
             self.action_list = self.face_action_list + self.orient_action_list
             self.action_space = spaces.Discrete(len(self.action_list))
-            self.scramble_space = spaces.Discrete(len(self.face_action_list))
+            self.face_space = spaces.Discrete(len(self.face_action_list))
+            self.orient_space = spaces.Discrete(len(self.orient_action_list))
 
         else:
             raise NotImplemented('Generation of Action Space past order 3 is not implemented')
@@ -87,7 +88,11 @@ class CubeEnv(gym.Env):
     # Otherwise you can provide a constant input,
     # Why is this a seperate function? So you may control these parameters
     # even after you've initialized the environment
-    def _refreshScrambleParameters(self, scramble_depth='1:4:10', max_steps='10:20:10'):
+    def _refreshScrambleParameters(self, scramble_depth='1:4:10', max_steps='10:20:10',
+            xeasy=False):
+
+        self.scramble_easy = xeasy
+
         self.scramble_update = 0
         self.max_steps_update = 0
     
@@ -137,12 +142,24 @@ class CubeEnv(gym.Env):
         self.max_steps += self.max_steps_update
         self.steps = 0
 
+        # This is some really really easy testing code
+        if self.scramble_easy:
+            self.cube.minimalInterpreter(1)
+            return self._genImgStateOneHot()
+
         # Perform some env scrambling here
         while self.cube.isSolved():
             # Keep attempting scrambles until we don't end up in a solved state
             scramble_actions = []
+
+            # We first choose a random orientation
+            for _ in range(10):
+                scramble_actions.append(self.orient_action_list[self.orient_space.sample()])
+                self.cube.minimalInterpreter(scramble_actions[-1])
+            
+            # Now scramble the moves.
             for _ in range(scramble):
-                scramble_actions.append(self.face_action_list[self.scramble_space.sample()])
+                scramble_actions.append(self.face_action_list[self.face_space.sample()])
                 self.cube.minimalInterpreter(scramble_actions[-1])
 
         return self._genImgStateOneHot()
@@ -196,19 +213,32 @@ def onehotToRGB(obs):
 
     for i in range(height):
         for j in range(width):
-            
-            if   obs[i, j, 0]:
-                rgb[i, j] = [0, 0, 1]
-            elif obs[i, j, 1]:
-                rgb[i, j] = [0, 1, 0]
-            elif obs[i, j, 2]:
-                rgb[i, j] = [0, 1, 1]
-            elif obs[i, j, 3]:
+           
+            # Red
+            if obs[i, j, 0]:
                 rgb[i, j] = [1, 0, 0]
-            elif obs[i, j, 4]:
+
+            # Orange (Purple)
+            elif obs[i, j, 1]:
                 rgb[i, j] = [1, 0, 1]
-            elif obs[i, j, 5]:
+
+            # Yellow
+            elif obs[i, j, 2]:
                 rgb[i, j] = [1, 1, 0]
+
+            # Green
+            elif obs[i, j, 3]:
+                rgb[i, j] = [0, 1, 0]
+
+            # Blue
+            elif obs[i, j, 4]:
+                rgb[i, j] = [0, 0, 1]
+
+            # White (Cyan)
+            elif obs[i, j, 5]:
+                rgb[i, j] = [0, 1, 1]
+
+            # Empty
             else:
                 rgb[i, j] = [0, 0, 0]
 
