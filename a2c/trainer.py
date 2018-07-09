@@ -37,6 +37,8 @@ class ActorCritic(object):
         self.vf_loss = tf.reduce_mean(tf.square(tf.squeeze(self.train_model.vf) - self.rewards) / 2.0)
         self.entropy = tf.reduce_mean(cat_entropy(self.train_model.pi))
         self.loss    = self.pg_loss - (ent_coeff * self.entropy) + (vf_coeff * self.vf_loss)
+        
+        self.mean_rew= tf.reduce_mean(self.rewards)
 
         # Find the model parameters and their gradients
         with tf.variable_scope('model'):
@@ -57,6 +59,7 @@ class ActorCritic(object):
             tf.summary.scalar('Entropy', self.entropy)
             tf.summary.scalar('Policy Gradient Loss', self.pg_loss)
             tf.summary.scalar('Value Function Loss', self.vf_loss)
+            tf.summary.scalar('Rewards', self.mean_rew)
 
         # fix tf scopes if we are loading a scope that is different from the saved instance
         name_scope = tf.contrib.framework.get_name_scope()
@@ -79,7 +82,7 @@ class ActorCritic(object):
         }
 
         inputs = self.train_model.get_inputs()
-        mapped_input = self.train_model.transform_input(obs, self.sess)
+        mapped_input = self.train_model.transform_input(obs)
         for transformed_input, inp in zip(mapped_input, inputs):
             feed_dict[inp] = transformed_input
 
@@ -88,6 +91,7 @@ class ActorCritic(object):
             self.pg_loss,
             self.vf_loss,
             self.entropy,
+            self.mean_rew,
             self.opt,
         ]
 
@@ -98,11 +102,11 @@ class ActorCritic(object):
 
     # Given an observation, perform an action
     def act(self, obs):
-        return self.step_model.step(self.sess, obs)
+        return self.step_model.step(obs)
 
     # Return the value of the value function
     def critique(self, obs):
-        return self.step_model.value(self.sess, obs)
+        return self.step_model.value(obs)
 
     # Dump the model parameters in the specified path
     def save(self, path, name):
@@ -117,7 +121,7 @@ class ActorCritic(object):
 
 # The function that trains the a2c model
 
-def train(env_id=None,
+def train(env_fn=None,
           policy=None,
           nenvs=16,
           nsteps=100,
@@ -137,18 +141,14 @@ def train(env_id=None,
           load_path=None,
           save_path='weights',
           log_path='./logs'):
-    
 
-    def make_env():
-        env = gym.make(env_id)
-        return env
-
-    envs = [ make_env for _ in range(nenvs) ]
+    envs = [ env_fn for _ in range(nenvs) ]
     envs = SubprocVecEnv(envs)
 
     ob_space = envs.observation_space.shape
     nw, nh, nc = ob_space
     ac_space = envs.action_space
+
 
     obs = envs.reset()
 
@@ -175,6 +175,7 @@ def train(env_id=None,
         final_rewards = np.zeros((nenvs, ))
 
         print('a2c Training Start!')
+        print('Model will be saved on intervals of %i' % (save_interval))
         for i in tqdm(range(load_count + 1, int(max_iterations) + 1)):
            
             # Create the minibatch lists
@@ -230,23 +231,21 @@ def train(env_id=None,
 
             # Save the information to tensorboard
             if summarize:
-                loss, policy_loss, value_loss, policy_entropy, _, summary = actor_critic.train(
+                loss, policy_loss, value_loss, policy_entropy, mrew, _, summary = actor_critic.train(
                         mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, i, summary_op)
                 writer.add_summary(summary, i)
             else:
-                loss, policy_loss, value_loss, policy_entropy, _ = actor_critic.train(
+                loss, policy_loss, value_loss, policy_entropy, mrew, _ = actor_critic.train(
                         mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, i)
                 
             # Print some training information
             if i % log_interval == 0 or i == 0:
-                print('\nIteration: %i'% (i))
-                print('Policy Loss: %.4f' % (policy_loss))
-                print('Value Loss: %.4f' % (value_loss))
-                print('Entropy: %.4f' % (policy_entropy))
-                print(final_rewards.mean())
+                with open(log_path + '/run.log', 'w') as runlog:
+                    runlog.write('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, R_m: %.4f' %
+                            (i, policy_loss, value_loss, policy_entropy, mrew))
+                    runlog.write(' ~ '+str(final_rewards.mean())+'\n')
 
             if i % save_interval == 0:
-                print('Saving Model')
                 actor_critic.save(save_path, save_name + '_' + str(i) + '.ckpt')
             
         actor_critic.save(save_path, save_name + '_done.ckpt')
