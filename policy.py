@@ -9,6 +9,11 @@ import tensorflow as tf
 # Basic baseline policy
 class CnnPolicy(object):
     def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
+        
+        self.sess = sess
+        hid_size=32
+        num_hid_layers=4
+
         nw, nh, nc = ob_space
 
         nact = ac_space.n
@@ -28,13 +33,23 @@ class CnnPolicy(object):
                                         padding='VALID')
             h = tf.layers.dense(tf.layers.flatten(conv2), 256, activation=tf.nn.relu)
             with tf.variable_scope('pi'):
-                pi = tf.layers.dense(h, nact,
+                last_out = h
+                for i in range(num_hid_layers):
+                    last_out = tf.nn.tanh(tf.layers.dense(last_out, hid_size,
+                            kernel_initializer=tf.random_normal_initializer(0.01),
+                            bias_initializer=None))
+                pi = tf.layers.dense(last_out, nact,
                         activation=None,
                         kernel_initializer=tf.random_normal_initializer(0.01),
                         bias_initializer=None)
 
             with tf.variable_scope('v'):
-                vf = tf.layers.dense(h, 1,
+                last_out = h
+                for i in range(num_hid_layers):
+                    last_out = tf.nn.tanh(tf.layers.dense(last_out, hid_size,
+                            kernel_initializer=tf.random_normal_initializer(0.01),
+                            bias_initializer=None))
+                vf = tf.layers.dense(last_out, 1,
                         activation=None,
                         kernel_initializer=tf.random_normal_initializer(0.01),
                         bias_initializer=None)[:, 0]
@@ -53,17 +68,17 @@ class CnnPolicy(object):
         self.pi = pi
         self.vf = vf
 
-    def step(self, sess, ob):
-        a, v, neglogp = sess.run([self.a0, self.vf, self.neglogp0], {self.X:ob})
+    def step(self, ob):
+        a, v, neglogp = self.sess.run([self.a0, self.vf, self.neglogp0], {self.X:ob})
         return a, v, neglogp
 
-    def value(self, sess, ob):
-        v = sess.run(self.vf, {self.X:ob})
+    def value(self, ob):
+        v = self.sess.run(self.vf, {self.X:ob})
         return v
 
     # Next two methods are required when we will have to generate the imaginations later in the I2A
     # code.
-    def transform_input(self, X, sess):
+    def transform_input(self, X):
         return [X]
 
     def get_inputs(self):
