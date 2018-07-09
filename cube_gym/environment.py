@@ -144,7 +144,8 @@ class CubeEnv(gym.Env):
 
         # This is some really really easy testing code
         if self.scramble_easy:
-            self.cube.minimalInterpreter(1)
+            # Only do a 'r' turn for the scramble. The solution is '.r'
+            self.cube.minimalInterpreter(self.face_action_list[0])
             return self._genImgStateOneHot()
 
         # Perform some env scrambling here
