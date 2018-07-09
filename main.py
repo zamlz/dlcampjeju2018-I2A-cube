@@ -6,7 +6,7 @@ from policy import *
 
 def cube_env_simple():
     env = gym.make('cube-x2-v0')
-    env.unwrapped._refreshScrambleParameters(1, 10)
+    env.unwrapped._refreshScrambleParameters(1, 10, scramble_easy=True)
     return env
 
 a2c.train(env_fn=cube_env_simple,

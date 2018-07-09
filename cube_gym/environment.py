@@ -89,9 +89,9 @@ class CubeEnv(gym.Env):
     # Why is this a seperate function? So you may control these parameters
     # even after you've initialized the environment
     def _refreshScrambleParameters(self, scramble_depth='1:4:10', max_steps='10:20:10',
-            xeasy=False):
+            scramble_easy=False):
 
-        self.scramble_easy = xeasy
+        self.scramble_easy = scramble_easy
 
         self.scramble_update = 0
         self.max_steps_update = 0
