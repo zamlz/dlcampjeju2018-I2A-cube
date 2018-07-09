@@ -11,8 +11,8 @@ def cube_env_simple():
 
 a2c.train(env_fn=cube_env_simple,
           policy=CnnPolicy,
-          nenvs=4,
-          nsteps=100,
+          nenvs=16,
+          nsteps=5,
           max_iterations=1e4,
           gamma=0.99,
           vf_coeff = 0.5,
