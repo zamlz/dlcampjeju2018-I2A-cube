@@ -1,6 +1,7 @@
 
 import os
 import gym
+import time
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -142,13 +143,17 @@ def train(env_fn=None,
           save_path='weights',
           log_path='./logs'):
 
+    # Construct the vectorized parallel environments
     envs = [ env_fn for _ in range(nenvs) ]
     envs = SubprocVecEnv(envs)
+
+    # Set some random seeds for the environment
+    for e in range(nenvs):
+        envs.seed(e, int(time.time() * (e+1)))
 
     ob_space = envs.observation_space.shape
     nw, nh, nc = ob_space
     ac_space = envs.action_space
-
 
     obs = envs.reset()
 

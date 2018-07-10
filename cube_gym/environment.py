@@ -39,6 +39,7 @@ class CubeEnv(gym.Env):
         
         self.order = order
         self._refreshScrambleParameters(scramble_depth, max_steps)
+        self.agent_solved = False
 
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
         # as functions of the other moves) and 6 orientation moves.
@@ -79,6 +80,7 @@ class CubeEnv(gym.Env):
 
         self.steps = 0
         self.cube = cg.Cube(order=order)
+        self._seed(seed=None)
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -86,22 +88,30 @@ class CubeEnv(gym.Env):
 
     # You can update the parameters of scrambling and max_steps
     # String inputs are of the form 'initial:final:episodes'
+    #
     # Otherwise you can provide a constant input,
+    #
     # Why is this a seperate function? So you may control these parameters
     # even after you've initialized the environment
+    #
+    # Adaptive is another type of curriculum, it update the scramble size if
+    # you solve the cube correctly and decreases it if you can't.
     def _refreshScrambleParameters(self, scramble_depth='1:4:10', max_steps='10:20:10',
-            scramble_easy=False):
+            scramble_easy=False, adaptive=False):
 
         self.scramble_easy = scramble_easy
+        self.adaptive_curriculum = adaptive
 
         self.scramble_update = 0
         self.max_steps_update = 0
-    
+
+        # Extract the linear scramble curriculum from the string
         if type(scramble_depth) is str: 
             scramlist = [ int(x) for x in scramble_depth.split(':') ]
             self.scramble_update = float((scramlist[1] - scramlist[0]) / scramlist[2])
             scramble_depth = scramlist[0]
-       
+      
+        # Extract the linear step-time curriculum from the string
         if type(max_steps) is str:
             stepslist = [ int(x) for x in max_steps.split(':') ]
             self.max_steps_update = float((stepslist[1] - stepslist[0]) / stepslist[2])
@@ -117,6 +127,7 @@ class CubeEnv(gym.Env):
     # Generates a positive reward only when the cube is solved.
     def _sparse_reward(self):
         if self.cube.isSolved():
+            self.agent_solved = True
             return 1.0, True
         return 0.0, False
 
@@ -138,16 +149,30 @@ class CubeEnv(gym.Env):
     def reset(self, *args, **kwargs):
         self.cube.restoreSolvedState()
 
+        # This is the linear scramble update curriculum
+        # if its not set via the _refreshScrambleParameters
+        # then these parameters lines below don't do anyting
         self.scramble_depth += self.scramble_update
-        scramble = int(self.scramble_depth)
         self.max_steps += self.max_steps_update
-        self.steps = 0
-
+        
         # This is some really really easy testing code
         if self.scramble_easy:
             # Only do a 'r' turn for the scramble. The solution is '.r'
             self.cube.minimalInterpreter(self.face_action_list[0])
             return self._genImgStateOneHot()
+
+        # If you're using the adaptive curriculum
+        if self.adaptive_curriculum:
+            if self.agent_solved:
+                self.scramble_depth = 1 + int(self.scramble_depth)
+                self.max_steps = 2 + int(self.max_steps)
+            elif not self.agent_solved and self.scramble_depth > 1:
+                self.scramble_depth = max(1, self.scramble_depth - 1)
+                self.max_steps = max(1, self.max_steps - 2)
+        
+        self.agent_solved = False
+        self.steps = 0
+        scramble = int(self.scramble_depth)
 
         # Perform some env scrambling here
         while self.cube.isSolved():
