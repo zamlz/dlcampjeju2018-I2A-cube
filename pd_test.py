@@ -17,6 +17,7 @@ def env_fn():
 actions = env_fn().unwrapped.action_list
 
 envs = SubprocVecEnv([env_fn])
+# envs.seed(0, int(time.time()))
 
 obs = envs.reset()
 envs.render(0)
