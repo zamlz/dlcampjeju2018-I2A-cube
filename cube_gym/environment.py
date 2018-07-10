@@ -57,6 +57,7 @@ class CubeEnv(gym.Env):
             ]
 
             self.action_list = self.face_action_list + self.orient_action_list
+
             self.action_space = spaces.Discrete(len(self.action_list))
             self.face_space = spaces.Discrete(len(self.face_action_list))
             self.orient_space = spaces.Discrete(len(self.orient_action_list))
@@ -155,13 +156,14 @@ class CubeEnv(gym.Env):
 
             # We first choose a random orientation
             for _ in range(10):
-                scramble_actions.append(self.orient_action_list[self.orient_space.sample()])
+                scramble_actions.append(self.np_random.choice(self.orient_action_list))
                 self.cube.minimalInterpreter(scramble_actions[-1])
             
             # Now scramble the moves.
             for _ in range(scramble):
-                scramble_actions.append(self.face_action_list[self.face_space.sample()])
+                scramble_actions.append(self.np_random.choice(self.face_action_list))
                 self.cube.minimalInterpreter(scramble_actions[-1])
+        self.scramble_current = scramble_actions
 
         return self._genImgStateOneHot()
 

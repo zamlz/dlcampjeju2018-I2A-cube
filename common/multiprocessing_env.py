@@ -28,6 +28,8 @@ def worker(remote, parent_remote, env_fn_wrapper):
             remote.send((env.observation_space, env.action_space))
         elif cmd == 'render':
             env.render()
+        elif cmd == 'seed':
+            env.unwrapped._seed(data)
         else:
             raise NotImplementedError
 
@@ -141,6 +143,9 @@ class SubprocVecEnv(VecEnv):
 
     def render(self, idx):
         self.remotes[idx].send(('render', None))
+
+    def seed(self, idx, seed=None):
+        self.remotes[idx].send(('seed', seed))
 
     def close(self):
         if self.closed:
