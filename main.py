@@ -5,15 +5,15 @@ import cube_gym
 from policy import *
 
 def cube_env_simple():
-    env = gym.make('cube-x2-v0')
-    env.unwrapped._refreshScrambleParameters(1, 10, scramble_easy=True)
+    env = gym.make('cube-x3-v0')
+    env.unwrapped._refreshScrambleParameters(1, 2, scramble_easy=False)
     return env
 
 a2c.train(env_fn=cube_env_simple,
           policy=CnnPolicy,
           nenvs=16,
-          nsteps=5,
-          max_iterations=1e4,
+          nsteps=40,
+          max_iterations=2e4,
           gamma=0.99,
           vf_coeff = 0.5,
           ent_coeef = 0.01,

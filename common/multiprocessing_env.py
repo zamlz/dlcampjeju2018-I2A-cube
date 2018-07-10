@@ -12,6 +12,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
         if cmd == 'step':
             ob, reward, done, info = env.step(data)
             if done:
+                info = np.copy(ob)
                 ob = env.reset()
             remote.send((ob, reward, done, info))
         elif cmd == 'reset':
@@ -25,6 +26,8 @@ def worker(remote, parent_remote, env_fn_wrapper):
             break
         elif cmd == 'get_spaces':
             remote.send((env.observation_space, env.action_space))
+        elif cmd == 'render':
+            env.render()
         else:
             raise NotImplementedError
 
@@ -135,6 +138,9 @@ class SubprocVecEnv(VecEnv):
         for remote in self.remotes:
             remote.send(('reset_task', None))
         return np.stack([remote.recv() for remote in self.remotes])
+
+    def render(self, idx):
+        self.remotes[idx].send(('render', None))
 
     def close(self):
         if self.closed:

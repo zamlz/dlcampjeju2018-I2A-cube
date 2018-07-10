@@ -101,8 +101,8 @@ class ActorCritic(object):
         return self.sess.run(ret_vals, feed_dict=feed_dict)
 
     # Given an observation, perform an action
-    def act(self, obs):
-        return self.step_model.step(obs)
+    def act(self, obs, stochastic=True):
+        return self.step_model.step(obs, stochastic=stochastic)
 
     # Return the value of the value function
     def critique(self, obs):
@@ -180,6 +180,7 @@ def train(env_fn=None,
            
             # Create the minibatch lists
             mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [], [], [], [], []
+            total_reward = 0
 
             for n in range(nsteps):
                
@@ -192,6 +193,7 @@ def train(env_fn=None,
                 mb_dones.append(dones)
 
                 obs, rewards, dones, _ = envs.step(actions)
+                total_reward += np.sum(rewards)
 
                 episode_rewards += rewards
                 masks = 1 - np.array(dones)
@@ -243,7 +245,7 @@ def train(env_fn=None,
                 with open(log_path + '/run.log', 'w') as runlog:
                     runlog.write('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, R_m: %.4f' %
                             (i, policy_loss, value_loss, policy_entropy, mrew))
-                    runlog.write(' ~ '+str(final_rewards.mean())+'\n')
+                    runlog.write(' ~ '+str(total_reward)+'\n')
 
             if i % save_interval == 0:
                 actor_critic.save(save_path, save_name + '_' + str(i) + '.ckpt')
