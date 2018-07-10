@@ -168,3 +168,8 @@ class CnnPolicy(object):
     def get_inputs(self):
         return [self.X]
 
+
+Policies = {
+    'mlp': MlpPolicy,
+    'cnn': CnnPolicy
+}

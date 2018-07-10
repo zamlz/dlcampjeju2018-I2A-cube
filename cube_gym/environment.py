@@ -38,7 +38,7 @@ class CubeEnv(gym.Env):
     def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3):
         
         self.order = order
-        self._refreshScrambleParameters(scramble_depth, max_steps)
+        self._refresh(scramble_depth, max_steps)
         self.agent_solved = False
 
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
@@ -96,7 +96,7 @@ class CubeEnv(gym.Env):
     #
     # Adaptive is another type of curriculum, it update the scramble size if
     # you solve the cube correctly and decreases it if you can't.
-    def _refreshScrambleParameters(self, scramble_depth='1:4:10', max_steps='10:20:10',
+    def _refresh(self, scramble_depth='1:4:10', max_steps='10:20:10',
             scramble_easy=False, adaptive=False):
 
         self.scramble_easy = scramble_easy
@@ -150,7 +150,7 @@ class CubeEnv(gym.Env):
         self.cube.restoreSolvedState()
 
         # This is the linear scramble update curriculum
-        # if its not set via the _refreshScrambleParameters
+        # if its not set via the _refresh funtion
         # then these parameters lines below don't do anyting
         self.scramble_depth += self.scramble_update
         self.max_steps += self.max_steps_update

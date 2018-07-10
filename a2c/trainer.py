@@ -136,7 +136,6 @@ def train(env_fn=None,
           epsilon = 1e-5,
           log_interval=100,
           save_interval=1e5,
-          save_name=None,
           load_count=0,
           summarize=True,
           load_path=None,
@@ -253,9 +252,9 @@ def train(env_fn=None,
                     runlog.write(' ~ '+str(total_reward)+'\n')
 
             if i % save_interval == 0:
-                actor_critic.save(save_path, save_name + '_' + str(i) + '.ckpt')
+                actor_critic.save(save_path, str(i) + '.ckpt')
             
-        actor_critic.save(save_path, save_name + '_done.ckpt')
+        actor_critic.save(save_path, 'final.ckpt')
         print('a2c model is finished training')
 
 
