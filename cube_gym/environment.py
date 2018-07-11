@@ -134,7 +134,7 @@ class CubeEnv(gym.Env):
         if self.cube.isSolved():
             self.agent_solved = True
             return 1.0, True
-        return 0.0, False
+        return -0.1, False
 
     # -----------------------------------------------------------------------
 

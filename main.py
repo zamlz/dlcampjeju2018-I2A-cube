@@ -41,6 +41,9 @@ def main():
     parser.add_argument('--easy',
             help='Make the environment extremely easy; No orientation change, only R scrabmle',
             action="store_true")
+    parser.add_argument('--orient-scramble',
+            help='Lets the environment scramble orientation as well',
+            action="store_true")
 
     # Model Free Policy Parameteres
     parser.add_argument('--policy',
@@ -73,7 +76,8 @@ def main():
 
     def cube_env():
         env = gym.make(args.env)
-        env.unwrapped._refresh(args.scramble, args.maxsteps, args.easy, args.adaptive)
+        env.unwrapped._refresh(args.scramble, args.maxsteps, args.easy, args.adaptive,
+                              args.orient_scramble)
         return env
 
     if args.a2c:
