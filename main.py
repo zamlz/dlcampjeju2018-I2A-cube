@@ -24,7 +24,7 @@ def main():
     # Environment Arguments
     parser.add_argument('--env',
             help='Environment ID',
-            default='cube-x3-v0')
+            default='cube-x2-v0')
     parser.add_argument('--scramble',
             help='Set the max scramble size. format: size (or) initial:target:episodes',
             type=str, default='1')

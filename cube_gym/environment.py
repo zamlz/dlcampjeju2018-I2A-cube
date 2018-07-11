@@ -134,7 +134,7 @@ class CubeEnv(gym.Env):
         if self.cube.isSolved():
             self.agent_solved = True
             return 1.0, True
-        return -0.1, False
+        return 0.0, False
 
     # -----------------------------------------------------------------------
 
@@ -168,12 +168,14 @@ class CubeEnv(gym.Env):
 
         # If you're using the adaptive curriculum
         if self.adaptive_curriculum:
+            drate = 0.1
+            mrate = 0.1
             if self.agent_solved:
-                self.scramble_depth = 1 + int(self.scramble_depth)
-                self.max_steps = 2 + int(self.max_steps)
+                self.scramble_depth = drate + self.scramble_depth
+                self.max_steps = mrate + self.max_steps
             elif not self.agent_solved and self.scramble_depth > 1:
-                self.scramble_depth = max(1, self.scramble_depth - 1)
-                self.max_steps = max(1, self.max_steps - 2)
+                self.scramble_depth = max(1, self.scramble_depth - drate)
+                self.max_steps = max(1, self.max_steps - mrate)
         
         self.agent_solved = False
         self.steps = 0
