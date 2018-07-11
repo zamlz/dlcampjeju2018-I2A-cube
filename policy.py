@@ -10,15 +10,17 @@ class MlpPolicy(object):
     def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
         
         self.sess = sess
-        hid_size=32
-        num_hid_layers= 4
+        hid_size=512
+        num_hid_layers= 1
 
         nw, nh, nc = ob_space
 
         nact = ac_space.n
         X = tf.placeholder(tf.float32, [None, nw, nh, nc]) #obs
         with tf.variable_scope("model", reuse=reuse):
-            h = tf.layers.dense(tf.layers.flatten(X), 256, activation=tf.nn.relu)
+            h = tf.layers.dense(tf.layers.flatten(X), 4096, activation=tf.nn.relu)
+            h = tf.layers.dense(tf.layers.flatten(h), 2048, activation=tf.nn.relu)
+
             with tf.variable_scope('pi'):
                 last_out = h
                 for i in range(num_hid_layers):
@@ -86,8 +88,8 @@ class CnnPolicy(object):
     def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
         
         self.sess = sess
-        hid_size=32
-        num_hid_layers= 4
+        hid_size=512
+        num_hid_layers= 1
 
         nw, nh, nc = ob_space
 
@@ -106,7 +108,8 @@ class CnnPolicy(object):
                                         kernel_size=[3,3],
                                         strides=[2,2],
                                         padding='VALID')
-            h = tf.layers.dense(tf.layers.flatten(conv2), 256, activation=tf.nn.relu)
+            h = tf.layers.dense(tf.layers.flatten(conv2), 4096, activation=tf.nn.relu)
+            h = tf.layers.dense(tf.layers.flatten(h), 2048, activation=tf.nn.relu)
             with tf.variable_scope('pi'):
                 last_out = h
                 for i in range(num_hid_layers):
