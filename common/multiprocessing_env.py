@@ -12,7 +12,6 @@ def worker(remote, parent_remote, env_fn_wrapper):
         if cmd == 'step':
             ob, reward, done, info = env.step(data)
             if done:
-                info = np.copy(ob)
                 ob = env.reset()
             remote.send((ob, reward, done, info))
         elif cmd == 'reset':
@@ -144,8 +143,9 @@ class SubprocVecEnv(VecEnv):
     def render(self, idx):
         self.remotes[idx].send(('render', None))
 
-    def seed(self, idx, seed=None):
-        self.remotes[idx].send(('seed', seed))
+    def seed(self, seed=None):
+        for remote, i in zip(self.remotes,range(len(self.remotes))):
+            remote.send(('seed', seed + i))
 
     def close(self):
         if self.closed:

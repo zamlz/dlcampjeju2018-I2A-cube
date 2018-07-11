@@ -38,7 +38,6 @@ class CubeEnv(gym.Env):
     def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3):
         
         self.order = order
-        self._refresh(scramble_depth, max_steps)
         self.agent_solved = False
 
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
@@ -57,12 +56,6 @@ class CubeEnv(gym.Env):
                 'x', 'y', 'z', '.x', '.y', '.z',
             ]
 
-            self.action_list = self.face_action_list + self.orient_action_list
-
-            self.action_space = spaces.Discrete(len(self.action_list))
-            self.face_space = spaces.Discrete(len(self.face_action_list))
-            self.orient_space = spaces.Discrete(len(self.orient_action_list))
-
         else:
             raise NotImplemented('Generation of Action Space past order 3 is not implemented')
 
@@ -71,6 +64,8 @@ class CubeEnv(gym.Env):
         # to the criteria as well. It contains 6 channels, one for each color type.
         imglen = order*4
         self.observation_space = spaces.Box(-1, 1, (imglen, imglen, 6), dtype=np.float32)
+        self.action_space = None # Its set in the refresh command!!!
+        self._refresh(scramble_depth, max_steps)
 
         # Choose the specified reward function
         reward_funcs = {
@@ -97,10 +92,20 @@ class CubeEnv(gym.Env):
     # Adaptive is another type of curriculum, it update the scramble size if
     # you solve the cube correctly and decreases it if you can't.
     def _refresh(self, scramble_depth='1:4:10', max_steps='10:20:10',
-            scramble_easy=False, adaptive=False):
+            scramble_easy=False, adaptive=False, orient_scramble=False):
 
         self.scramble_easy = scramble_easy
         self.adaptive_curriculum = adaptive
+        self.orient_scramble = orient_scramble
+       
+        # This is updated here because if we decide to orient scramble our action
+        # space changes. THEREFORE, you should never change the orient scramble
+        # parameter after you started 
+        if orient_scramble:
+            self.action_list = self.face_action_list + self.orient_action_list
+        else:
+            self.action_list = self.face_action_list
+        self.action_space = spaces.Discrete(len(self.action_list))
 
         self.scramble_update = 0
         self.max_steps_update = 0
@@ -143,7 +148,7 @@ class CubeEnv(gym.Env):
         
         img = self._genImgStateOneHot()
 
-        return img, reward, done, {}
+        return img, reward, done, {'scramble_depth': self.scramble_depth}
 
     # Reset the environment
     def reset(self, *args, **kwargs):
@@ -180,9 +185,10 @@ class CubeEnv(gym.Env):
             scramble_actions = []
 
             # We first choose a random orientation
-            for _ in range(10):
-                scramble_actions.append(self.np_random.choice(self.orient_action_list))
-                self.cube.minimalInterpreter(scramble_actions[-1])
+            if self.orient_scramble:
+                for _ in range(10):
+                    scramble_actions.append(self.np_random.choice(self.orient_action_list))
+                    self.cube.minimalInterpreter(scramble_actions[-1])
             
             # Now scramble the moves.
             for _ in range(scramble):

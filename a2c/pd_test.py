@@ -9,7 +9,7 @@ def pd_test(env_fn, policy, load_path):
     actions = env_fn().unwrapped.action_list
 
     envs = SubprocVecEnv([env_fn])
-    envs.seed(0, int(time.time()))
+    envs.seed(int(time.time()))
 
     obs = envs.reset()
     envs.render(0)
@@ -39,9 +39,8 @@ def pd_test(env_fn, policy, load_path):
             for ac, pd in zip(actions, actor_critic.step_model.logits(obs)[0][0]):
                 print('\t', ac, pd)
 
-            obs, r, d, sbo = envs.step(a)
+            obs, r, d, _ = envs.step(a)
             print('r: ', r)
-            envs.render(0)
             time.sleep(0.1)
 
             d = d[0]

@@ -24,10 +24,11 @@ class ActorCritic(object):
         self.actions = tf.placeholder(tf.int32, [nbatch])
         self.advantages = tf.placeholder(tf.float32, [nbatch])
         self.rewards = tf.placeholder(tf.float32, [nbatch])
+        self.depth = tf.placeholder(tf.float32, [nbatch])
       
         # setup the models
         self.step_model = policy(self.sess, ob_space, ac_space, nenvs, 1, reuse=False)
-        self.train_model = policy(self.sess, ob_space, ac_space, nenvs*nsteps, nsteps, reuse=True)
+        self.train_model = policy(self.sess, ob_space, ac_space, nbatch, nsteps, reuse=True)
 
         # Negative log probs of actions
         neglogpac = tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -40,6 +41,7 @@ class ActorCritic(object):
         self.loss    = self.pg_loss - (ent_coeff * self.entropy) + (vf_coeff * self.vf_loss)
         
         self.mean_rew= tf.reduce_mean(self.rewards)
+        self.mean_depth = tf.reduce_mean(self.depth)
 
         # Find the model parameters and their gradients
         with tf.variable_scope('model'):
@@ -61,6 +63,7 @@ class ActorCritic(object):
             tf.summary.scalar('Policy Gradient Loss', self.pg_loss)
             tf.summary.scalar('Value Function Loss', self.vf_loss)
             tf.summary.scalar('Rewards', self.mean_rew)
+            tf.summary.scalar('Depth', self.mean_depth)
 
         # fix tf scopes if we are loading a scope that is different from the saved instance
         name_scope = tf.contrib.framework.get_name_scope()
@@ -73,13 +76,14 @@ class ActorCritic(object):
         self.saver = tf.train.Saver(params, max_to_keep=15)
 
     # Single training step
-    def train(self, obs, rewards, masks, actions, values, step, summary_op=None):
+    def train(self, obs, rewards, masks, actions, values, depth, step, summary_op=None):
         advantages = rewards - values
 
         feed_dict = {
             self.actions: actions,
             self.advantages: advantages,
             self.rewards: rewards,
+            self.depth: depth,
         }
 
         inputs = self.train_model.get_inputs()
@@ -93,6 +97,7 @@ class ActorCritic(object):
             self.vf_loss,
             self.entropy,
             self.mean_rew,
+            self.mean_depth,
             self.opt,
         ]
 
@@ -147,8 +152,7 @@ def train(env_fn=None,
     envs = SubprocVecEnv(envs)
 
     # Set some random seeds for the environment
-    for e in range(nenvs):
-        envs.seed(e, int(time.time() * (e+1)))
+    envs.seed(0)
 
     ob_space = envs.observation_space.shape
     nw, nh, nc = ob_space
@@ -183,7 +187,7 @@ def train(env_fn=None,
         for i in tqdm(range(load_count + 1, int(max_iterations) + 1)):
            
             # Create the minibatch lists
-            mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [], [], [], [], []
+            mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_depth = [], [], [], [], [], []
             total_reward = 0
 
             for n in range(nsteps):
@@ -196,7 +200,7 @@ def train(env_fn=None,
                 mb_values.append(values)
                 mb_dones.append(dones)
 
-                obs, rewards, dones, _ = envs.step(actions)
+                obs, rewards, dones, info = envs.step(actions)
                 total_reward += np.sum(rewards)
 
                 episode_rewards += rewards
@@ -206,6 +210,8 @@ def train(env_fn=None,
                 episode_rewards *= masks
 
                 mb_rewards.append(rewards)
+                mb_depth.append(np.array([ info_item['scramble_depth'] for info_item in info ]))
+
             mb_dones.append(dones)
 
             # Convert batch steps to batch rollouts
@@ -214,6 +220,7 @@ def train(env_fn=None,
             mb_actions = np.asarray(mb_actions, dtype=np.int32).swapaxes(1,0)
             mb_values = np.asarray(mb_values, dtype=np.float32).swapaxes(1,0)
             mb_dones = np.asarray(mb_dones, dtype=np.float32).swapaxes(1,0)
+            mb_depth = np.asarray(mb_depth, dtype=np.int32).swapaxes(1,0)
             mb_masks = mb_dones[:, :-1]
             mb_dones = mb_dones[:, 1:]
 
@@ -234,21 +241,22 @@ def train(env_fn=None,
             mb_actions = mb_actions.flatten()
             mb_values = mb_values.flatten()
             mb_masks = mb_masks.flatten()
+            mb_depth = mb_depth.flatten()
 
             # Save the information to tensorboard
             if summarize:
-                loss, policy_loss, value_loss, policy_entropy, mrew, _, summary = actor_critic.train(
-                        mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, i, summary_op)
+                loss, policy_loss, value_loss, policy_ent, mrew, mdp, _, summary = actor_critic.train(
+                        mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, mb_depth, i, summary_op)
                 writer.add_summary(summary, i)
             else:
-                loss, policy_loss, value_loss, policy_entropy, mrew, _ = actor_critic.train(
-                        mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, i)
+                loss, policy_loss, value_loss, policy_ent, mrew, mdp, _ = actor_critic.train(
+                        mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, mb_depth, i)
                 
             # Print some training information
             if i % log_interval == 0 or i == 0:
                 with open(log_path + '/run.log', 'w') as runlog:
-                    runlog.write('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, R_m: %.4f' %
-                            (i, policy_loss, value_loss, policy_entropy, mrew))
+                    runlog.write('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, Cur: %.4f, R_m: %.4f' %
+                            (i, policy_loss, value_loss, policy_ent, mdp, mrew))
                     runlog.write(' ~ '+str(total_reward)+'\n')
 
             if i % save_interval == 0:
