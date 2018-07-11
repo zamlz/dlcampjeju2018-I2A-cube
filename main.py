@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
-import gym
 import sys
 import argparse
 
-import a2c
-import cube_gym
-from policy import Policies
 
 
 def main():
@@ -73,6 +69,12 @@ def main():
         args.scramble = int(args.scramble)
     if ':' not in args.maxsteps:
         args.maxsteps = int(args.maxsteps)
+
+    # We import the main stuff here, otherwise its really slow
+    import gym
+    import a2c
+    import cube_gym
+    from policy import Policies
 
     def cube_env():
         env = gym.make(args.env)
