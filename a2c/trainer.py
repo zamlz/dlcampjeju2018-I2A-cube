@@ -255,6 +255,9 @@ def train(env_fn=None,
             # Print some training information
             if i % log_interval == 0 or i == 0:
                 with open(log_path + '/run.log', 'w') as runlog:
+                    print('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, Cur: %.4f, R_m: %.4f' %
+                            (i, policy_loss, value_loss, policy_ent, mdp, mrew))
+                    print(' ~ '+str(total_reward)+'\n')
                     runlog.write('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, Cur: %.4f, R_m: %.4f' %
                             (i, policy_loss, value_loss, policy_ent, mdp, mrew))
                     runlog.write(' ~ '+str(total_reward)+'\n')

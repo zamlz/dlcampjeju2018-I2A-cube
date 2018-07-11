@@ -168,8 +168,8 @@ class CubeEnv(gym.Env):
 
         # If you're using the adaptive curriculum
         if self.adaptive_curriculum:
-            drate = 0.1
-            mrate = 0.1
+            drate = 1
+            mrate = 1
             if self.agent_solved:
                 self.scramble_depth = drate + self.scramble_depth
                 self.max_steps = mrate + self.max_steps
