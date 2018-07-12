@@ -34,6 +34,9 @@ def main():
     parser.add_argument('--adaptive',
             help='Turn on the adaptive curriculum',
             action="store_true")
+    parser.add_argument('--spectrum',
+            help='Setup up a spectrum of environments with different difficulties',
+            action="store_true")
     parser.add_argument('--easy',
             help='Make the environment extremely easy; No orientation change, only R scrabmle',
             action="store_true")
@@ -84,6 +87,7 @@ def main():
 
     if args.a2c:
         a2c.train(  env_fn          = cube_env,
+                    spectrum        = args.spectrum,
                     policy          = Policies[args.policy],
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,

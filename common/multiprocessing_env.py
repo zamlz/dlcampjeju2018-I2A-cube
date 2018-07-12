@@ -29,6 +29,10 @@ def worker(remote, parent_remote, env_fn_wrapper):
             env.render()
         elif cmd == 'seed':
             env.unwrapped._seed(data)
+        elif cmd == 'spectrum':
+            orscr = env.unwrapped.orient_scramble
+            adapt = env.unwrapped.adaptive_curriculum
+            env.unwrapped._refresh(data, data, False, adapt, orscr)
         else:
             raise NotImplementedError
 
@@ -146,6 +150,10 @@ class SubprocVecEnv(VecEnv):
     def seed(self, seed=None):
         for remote, i in zip(self.remotes,range(len(self.remotes))):
             remote.send(('seed', seed + i))
+
+    def spectrum(self):
+        for remote, s in zip(self.remotes, range(1, 1+len(self.remotes))):
+            remote.send(('spectrum', s))
 
     def close(self):
         if self.closed:

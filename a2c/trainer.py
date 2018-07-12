@@ -128,6 +128,7 @@ class ActorCritic(object):
 # The function that trains the a2c model
 
 def train(env_fn=None,
+          spectrum=False,
           policy=None,
           nenvs=16,
           nsteps=100,
@@ -153,6 +154,8 @@ def train(env_fn=None,
 
     # Set some random seeds for the environment
     envs.seed(0)
+    if spectrum:
+        envs.spectrum()
 
     ob_space = envs.observation_space.shape
     nw, nh, nc = ob_space
