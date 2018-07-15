@@ -88,8 +88,8 @@ class CnnPolicy(object):
     def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False, coordConv=True):
         
         self.sess = sess
-        hid_size=512
-        num_hid_layers= 1
+        hid_size = 512
+        num_hid_layers = 4
 
         nw, nh, nc = ob_space
 
@@ -122,13 +122,15 @@ class CnnPolicy(object):
                                         kernel_size=[3,3],
                                         strides=[2,2],
                                         padding='VALID')
+
             h = tf.layers.dense(tf.layers.flatten(conv2), 4096, activation=tf.nn.relu)
             h = tf.layers.dense(tf.layers.flatten(h), 2048, activation=tf.nn.relu)
+
             with tf.variable_scope('pi'):
 
                 last_out = h
                 for i in range(num_hid_layers):
-                    last_out = tf.nn.tanh(tf.layers.dense(last_out, hid_size,
+                    last_out = tf.nn.relu(tf.layers.dense(last_out, hid_size,
                             kernel_initializer=tf.random_normal_initializer(0.01),
                             bias_initializer=None))
                 pi = tf.layers.dense(last_out, nact,
@@ -139,7 +141,7 @@ class CnnPolicy(object):
             with tf.variable_scope('v'):
                 last_out = h
                 for i in range(num_hid_layers):
-                    last_out = tf.nn.tanh(tf.layers.dense(last_out, hid_size,
+                    last_out = tf.nn.relu(tf.layers.dense(last_out, hid_size,
                             kernel_initializer=tf.random_normal_initializer(0.01),
                             bias_initializer=None))
                 vf = tf.layers.dense(last_out, 1,

@@ -97,7 +97,7 @@ def main():
                     max_iterations  = int(args.iters),
                     gamma           = 0.99,
                     vf_coeff        = 0.5,
-                    ent_coeef       = 0.01,
+                    ent_coeff       = 0.01,
                     max_grad_norm   = 0.5,
                     lr              = 7e-4,
                     alpha           = 0.99,

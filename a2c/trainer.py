@@ -135,7 +135,7 @@ def train(env_fn=None,
           max_iterations=1e6,
           gamma=0.99,
           vf_coeff = 0.5,
-          ent_coeef = 0.01,
+          ent_coeff = 0.01,
           max_grad_norm = 0.5,
           lr = 7e-4,
           alpha = 0.99,
@@ -165,7 +165,7 @@ def train(env_fn=None,
 
     with tf.Session() as sess:
         actor_critic = ActorCritic(sess, policy, ob_space, ac_space, nenvs, nsteps,
-                                   vf_coeff, ent_coeef, max_grad_norm,
+                                   vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
 
         if load_path is not None:
