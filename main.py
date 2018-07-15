@@ -66,6 +66,11 @@ def main():
             help='Load Path for the Actor-Critic Parameters',
             type=str, default=None)
 
+    # Other misc arguments
+    parser.add_argument('--log-interval',
+            help='Set the logging interval',
+            type=int, default=100)
+
     args = parser.parse_args()
 
     # Verify that atleast one of the primary functions are chosen by the user
@@ -102,7 +107,7 @@ def main():
                     lr              = 7e-4,
                     alpha           = 0.99,
                     epsilon         = 1e-5,
-                    log_interval    = 100,
+                    log_interval    = args.log_interval,
                     save_interval   = 1e3,
                     load_count      = 0,
                     summarize       = True,
