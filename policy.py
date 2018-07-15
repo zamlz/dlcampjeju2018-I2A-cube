@@ -85,7 +85,7 @@ class MlpPolicy(object):
 
 # Basic Convolutional Netowrk policy
 class CnnPolicy(object):
-    def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False, coordConv=False):
+    def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False, coordConv=True):
         
         self.sess = sess
         hid_size=512

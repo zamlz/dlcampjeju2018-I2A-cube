@@ -48,6 +48,9 @@ def main():
     parser.add_argument('--policy',
             help='Specify the type of policy for the model free part [cnn, mlp]',
             type=str, default='cnn')
+    parser.add_argument('--coordConv',
+            help='Use the special Coordinate Convolutional Layers',
+            action="store_true")
 
     # Actor Critic Arguments
     parser.add_argument('--workers',
