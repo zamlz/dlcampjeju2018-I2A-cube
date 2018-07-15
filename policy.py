@@ -85,7 +85,7 @@ class MlpPolicy(object):
 
 # Basic Convolutional Netowrk policy
 class CnnPolicy(object):
-    def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
+    def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False, coordConv=False):
         
         self.sess = sess
         hid_size=512
@@ -95,7 +95,20 @@ class CnnPolicy(object):
 
         nact = ac_space.n
         X = tf.placeholder(tf.float32, [None, nw, nh, nc]) #obs
+
         with tf.variable_scope("model", reuse=reuse):
+
+            if coordConv:
+                icrd = np.vstack([np.arange(nw) for _ in range(nh)])   / max(nw, nh)
+                jcrd = np.vstack([np.arange(nh) for _ in range(nw)]).T / max(nw, nh)
+                crd = np.stack([icrd, jcrd], axis=2)
+                crd = crd.reshape([1, nw, nh, 2]).astype(dtype='float32')
+                crd = tf.constant(crd)
+
+                x_batch_size = tf.shape(X)[0]
+                crd_tiled = tf.tile(crd, tf.stack([x_batch_size, 1, 1, 1]))
+                X = tf.concat([X, crd_tiled], axis=3)
+
             conv1 = tf.layers.conv2d(activation=tf.nn.relu,
                                         inputs=X,
                                         filters=16,
@@ -111,6 +124,7 @@ class CnnPolicy(object):
             h = tf.layers.dense(tf.layers.flatten(conv2), 4096, activation=tf.nn.relu)
             h = tf.layers.dense(tf.layers.flatten(h), 2048, activation=tf.nn.relu)
             with tf.variable_scope('pi'):
+
                 last_out = h
                 for i in range(num_hid_layers):
                     last_out = tf.nn.tanh(tf.layers.dense(last_out, hid_size,
