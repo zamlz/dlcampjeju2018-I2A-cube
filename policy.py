@@ -95,6 +95,7 @@ class CnnPolicy(object):
 
         nact = ac_space.n
         X = tf.placeholder(tf.float32, [None, nw, nh, nc]) #obs
+        self.X = X
 
         with tf.variable_scope("model", reuse=reuse):
 
@@ -157,7 +158,6 @@ class CnnPolicy(object):
             logits=pi,
             labels=one_hot_actions)
 
-        self.X = X
         self.pi = pi
         self.vf = vf
 
