@@ -1,5 +1,6 @@
 
 import time
+import numpy as np
 import tensorflow as tf
 
 from a2c import ActorCritic
