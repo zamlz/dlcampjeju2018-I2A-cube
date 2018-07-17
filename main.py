@@ -22,8 +22,8 @@ def main():
     parser.add_argument('--a2c-pd-test',
             help='Test the Actor-Critic Params on a single env and show policy logits',
             action="store_true")
-    parser.add_argument('--name',
-            help='Name the current experiemnt',
+    parser.add_argument('--tag',
+            help='Tag the current experiemnt',
             type=str, default='')
 
     # Environment Arguments
@@ -45,7 +45,7 @@ def main():
     parser.add_argument('--easy',
             help='Make the environment extremely easy; No orientation change, only R scrabmle',
             action="store_true")
-    parser.add_argument('--orient-scramble',
+    parser.add_argument('--no-orient-scramble',
             help='Lets the environment scramble orientation as well',
             action="store_true")
 
@@ -115,14 +115,45 @@ def main():
     def cube_env():
         env = gym.make(args.env)
         env.unwrapped._refresh(args.scramble, args.maxsteps, args.easy, args.adaptive,
-                              args.orient_scramble)
+                              not args.no_orient_scramble)
         return env
 
     # Create the logging paths
-    curtime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f-"+args.name)
+    logpath = './experiments/'
 
     if args.a2c:
-        logpath = './experiments/a2c/' + curtime
+        logpath += 'a2c/'
+    elif args.em:
+        logpath += 'em/'
+
+    logpath += args.env + '/'
+
+    if args.adaptive:
+        logpath += 'adaptive/'
+    elif args.spectrum:
+        logpath += 'spectrum/'
+    elif args.easy:
+        logpath += 'easy/'
+    else:
+        logpath += 's_' + str(args.scramble) + '_m_' + str(args.maxsteps) + '/'
+
+    if args.no_orient_scramble:
+        logpath += 'os_no/'
+    else:
+        logpath += 'os_yes/'
+
+    logpath += 'iter_' + str(args.iters) + '/'
+    logpath += 'lr_' + str(args.lr) + '/'
+    logpath += 'pgk_' + str(args.pg_coeff) + '/'
+    logpath += 'vfk_' + str(args.vf_coeff) + '/'
+    logpath += 'entk_' + str(args.ent_coeff) + '/'
+   
+    if args.tag == '':
+        logpath += datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f/")
+    else:
+        logpath += args.tag + '/'
+
+    if args.a2c:
         a2c.train(  env_fn          = cube_env,
                     spectrum        = args.spectrum,
                     policy          = Policies[args.policy],

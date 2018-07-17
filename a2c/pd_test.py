@@ -13,8 +13,6 @@ def pd_test(env_fn, policy, load_path):
 
     obs = env.reset()
     obs = np.expand_dims(obs, axis=0)
-    print(env.unwrapped.scramble_current)
-    env.render()
 
     action_list = []
 
@@ -30,6 +28,7 @@ def pd_test(env_fn, policy, load_path):
             sess.run(tf.global_variables_initializer())
             print('WARNING: No Model Loaded!')
 
+        print(env.unwrapped.scramble_current)
         d = False
         while not d:
             print('-------------------------------------------------')
