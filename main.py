@@ -66,6 +66,9 @@ def main():
     parser.add_argument('--a2c-load',
             help='Load Path for the Actor-Critic Parameters',
             type=str, default=None)
+    parser.add_argument('--lr',
+            help='Specify the learning rate to use',
+            type=float, default=7e-4)
     parser.add_argument('--pg-coeff',
             help='Specify the Policy Gradient Loss Coefficient',
             type=float, default=1.0)
@@ -82,7 +85,7 @@ def main():
             type=int, default=100)
     parser.add_argument('--cpu',
             help='Set the number of cpu cores available',
-            type=int, default=1)
+            type=int, default=16)
 
     args = parser.parse_args()
 
@@ -123,7 +126,7 @@ def main():
                     vf_coeff        = args.vf_coeff,
                     ent_coeff       = args.ent_coeff,
                     max_grad_norm   = 0.5,
-                    lr              = 7e-4,
+                    lr              = args.lr,
                     alpha           = 0.99,
                     epsilon         = 1e-5,
                     log_interval    = args.log_interval,
