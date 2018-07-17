@@ -45,10 +45,9 @@ def pd_test(env_fn, policy, load_path):
             for ac, pd in zip(actions, actor_critic.step_model.logits(obs)[0][0]):
                 print('\t', ac, pd)
 
-            obs, r, d, _ = env.step(a)
+            obs, r, d, _ = env.step(a[0])
             print('r: ', r)
             time.sleep(0.1)
-            d = d[0]
             obs = np.expand_dims(obs, axis=0)
 
     env.close()
