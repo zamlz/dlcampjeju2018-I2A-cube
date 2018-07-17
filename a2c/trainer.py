@@ -13,7 +13,7 @@ from common.multiprocessing_env import SubprocVecEnv
 class ActorCritic(object):
 
     def __init__(self, sess, policy, ob_space, ac_space, nenvs, nsteps,
-                 ent_coeff, vf_coeff, max_grad_norm, lr, alpha, epsilon,
+                 pg_coeff, vf_coeff, ent_coeff, max_grad_norm, lr, alpha, epsilon,
                  summarize):
 
         self.sess = sess
@@ -38,7 +38,7 @@ class ActorCritic(object):
         self.pg_loss = tf.reduce_mean(self.advantages * neglogpac)
         self.vf_loss = tf.reduce_mean(tf.square(tf.squeeze(self.train_model.vf) - self.rewards) / 2.0)
         self.entropy = tf.reduce_mean(cat_entropy(self.train_model.pi))
-        self.loss    = self.pg_loss - (ent_coeff * self.entropy) + (vf_coeff * self.vf_loss)
+        self.loss = pg_coeff*self.pg_loss - ent_coeff*self.entropy + vf_coeff*self.vf_loss
         
         self.mean_rew= tf.reduce_mean(self.rewards)
         self.mean_depth = tf.reduce_mean(self.depth)
@@ -134,6 +134,7 @@ def train(env_fn=None,
           nsteps=100,
           max_iterations=1e6,
           gamma=0.99,
+          pg_coeff = 1.0,
           vf_coeff = 0.5,
           ent_coeff = 0.01,
           max_grad_norm = 0.5,
@@ -165,7 +166,7 @@ def train(env_fn=None,
 
     with tf.Session() as sess:
         actor_critic = ActorCritic(sess, policy, ob_space, ac_space, nenvs, nsteps,
-                                   vf_coeff, ent_coeff, max_grad_norm,
+                                   pg_coeff, vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
 
         if load_path is not None:
