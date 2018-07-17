@@ -66,6 +66,15 @@ def main():
     parser.add_argument('--a2c-load',
             help='Load Path for the Actor-Critic Parameters',
             type=str, default=None)
+    parser.add_argument('--pg-coeff',
+            help='Specify the Policy Gradient Loss Coefficient',
+            type=float, default=1.0)
+    parser.add_argument('--vf-coeff',
+            help='Specify the Value Function Loss Coefficient',
+            type=float, default=0.5)
+    parser.add_argument('--ent-coeff',
+            help='Specify the Entropy Coefficient',
+            type=float, default=0.01)
 
     # Other misc arguments
     parser.add_argument('--log-interval',
@@ -107,8 +116,9 @@ def main():
                     nsteps          = args.nsteps,
                     max_iterations  = int(args.iters),
                     gamma           = 0.99,
-                    vf_coeff        = 0.5,
-                    ent_coeff       = 0.01,
+                    pg_coeff        = args.pg_coeff, 
+                    vf_coeff        = args.vf_coeff,
+                    ent_coeff       = args.ent_coeff,
                     max_grad_norm   = 0.5,
                     lr              = 7e-4,
                     alpha           = 0.99,
