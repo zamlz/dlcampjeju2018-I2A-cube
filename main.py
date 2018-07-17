@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import datetime
 import os
 
 
@@ -21,6 +22,9 @@ def main():
     parser.add_argument('--a2c-pd-test',
             help='Test the Actor-Critic Params on a single env and show policy logits',
             action="store_true")
+    parser.add_argument('--name',
+            help='Name the current experiemnt',
+            type=str, default='')
 
     # Environment Arguments
     parser.add_argument('--env',
@@ -114,7 +118,11 @@ def main():
                               args.orient_scramble)
         return env
 
+    # Create the logging paths
+    curtime = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f-"+args.name)
+
     if args.a2c:
+        logpath = './experiments/a2c/' + curtime
         a2c.train(  env_fn          = cube_env,
                     spectrum        = args.spectrum,
                     policy          = Policies[args.policy],
@@ -134,8 +142,8 @@ def main():
                     load_count      = 0,
                     summarize       = True,
                     load_path       = args.a2c_load,
-                    save_path       = './experiments/a2c/weights',
-                    log_path        = './experiments/a2c/logs',
+                    save_path       = logpath,
+                    log_path        = logpath, 
                     cpu_cores       = args.cpu)
     
     if args.a2c_pd_test:

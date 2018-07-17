@@ -146,8 +146,8 @@ def train(env_fn=None,
           load_count=0,
           summarize=True,
           load_path=None,
-          save_path='weights',
-          log_path='./logs',
+          save_path=None,
+          log_path=None,
           cpu_cores=1):
 
     # Construct the vectorized parallel environments
@@ -193,7 +193,7 @@ def train(env_fn=None,
 
         print('a2c Training Start!')
         print('Model will be saved on intervals of %i' % (save_interval))
-        for i in tqdm(range(load_count + 1, int(max_iterations) + 1)):
+        for i in tqdm(range(load_count + 1, int(max_iterations) + 1), ascii=True, desc='ActorCritic'):
            
             # Create the minibatch lists
             mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_depth = [], [], [], [], [], []
