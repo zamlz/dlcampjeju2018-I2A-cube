@@ -4,7 +4,6 @@ import sys
 import cube_gym
 import time
 import numpy as np
-from common.multiprocessing_env import SubprocVecEnv
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 

@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import os
 
 
 
@@ -80,6 +81,11 @@ def main():
         args.scramble = int(args.scramble)
     if ':' not in args.maxsteps:
         args.maxsteps = int(args.maxsteps)
+
+    # Decide whether we should use the GPU or not...
+    # Certain modes should use the GPU, waste of memory
+    if args.a2c_pd_test:
+        os.environ['CUDA_VISIBLE_DEVICES']="-1"
 
     # We import the main stuff here, otherwise its really slow
     import gym
