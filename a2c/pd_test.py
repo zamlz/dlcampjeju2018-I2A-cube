@@ -26,6 +26,7 @@ def pd_test(env_fn, policy, load_path):
         if load_path:
             actor_critic.load(load_path)
         else:
+            sess.run(tf.global_variables_initializer())
             print('WARNING: No Model Loaded!')
 
         d = False
