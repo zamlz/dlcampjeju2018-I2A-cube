@@ -13,6 +13,7 @@ def pd_test(env_fn, policy, load_path):
 
     obs = env.reset()
     obs = np.expand_dims(obs, axis=0)
+    print(env.unwrapped.scramble_current)
     env.render()
 
     action_list = []
@@ -34,7 +35,6 @@ def pd_test(env_fn, policy, load_path):
             print('-------------------------------------------------')
             print('Current Observation')
             env.render()
-            time.sleep(0.1)
 
             a, v, neg = actor_critic.act(obs, stochastic=True)
             print('')
@@ -47,7 +47,7 @@ def pd_test(env_fn, policy, load_path):
 
             obs, r, d, _ = env.step(a[0])
             print('r: ', r)
-            time.sleep(0.1)
             obs = np.expand_dims(obs, axis=0)
+        env.render()
 
     env.close()
