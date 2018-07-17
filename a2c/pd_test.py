@@ -21,7 +21,7 @@ def pd_test(env_fn, policy, load_path):
 
         actor_critic = ActorCritic(sess, policy,
                 env.observation_space.shape, env.action_space, 1, 5,
-                0.5, 0.01, 0.5, 7e-4, 0.99, 1e-5, False)
+                1.0, 0.5, 0.01, 0.5, 7e-4, 0.99, 1e-5, False)
         
         if load_path:
             actor_critic.load(load_path)
