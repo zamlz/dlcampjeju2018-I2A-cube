@@ -80,6 +80,9 @@ def main():
     parser.add_argument('--log-interval',
             help='Set the logging interval',
             type=int, default=100)
+    parser.add_argument('--cpu',
+            help='Set the number of cpu cores available',
+            type=int, default=1)
 
     args = parser.parse_args()
 
@@ -129,7 +132,8 @@ def main():
                     summarize       = True,
                     load_path       = args.a2c_load,
                     save_path       = './experiments/a2c/weights',
-                    log_path        = './experiments/a2c/logs')
+                    log_path        = './experiments/a2c/logs',
+                    cpu_cores       = args.cpu)
     
     if args.a2c_pd_test:
         a2c.pd_test(env_fn          = cube_env,

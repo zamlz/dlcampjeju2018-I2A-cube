@@ -147,7 +147,8 @@ def train(env_fn=None,
           summarize=True,
           load_path=None,
           save_path='weights',
-          log_path='./logs'):
+          log_path='./logs',
+          cpu_cores=1):
 
     # Construct the vectorized parallel environments
     envs = [ env_fn for _ in range(nenvs) ]
@@ -164,7 +165,11 @@ def train(env_fn=None,
 
     obs = envs.reset()
 
-    with tf.Session() as sess:
+    tf_config = tf.ConfigProto(
+            inter_op_parallelism_threads=cpu_cores,
+            intra_op_parallelism_threads=cpu_cores )
+
+    with tf.Session(config=tf_config) as sess:
         actor_critic = ActorCritic(sess, policy, ob_space, ac_space, nenvs, nsteps,
                                    pg_coeff, vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
