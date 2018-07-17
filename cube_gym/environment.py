@@ -144,7 +144,7 @@ class CubeEnv(gym.Env):
         self.cube.minimalInterpreter(self.action_list[action])
         
         reward, rdone = self.reward_function()
-        done = (self.steps > int(self.max_steps)) or rdone
+        done = (self.steps >= int(self.max_steps)) or rdone
         
         img = self._genImgStateOneHot()
 
