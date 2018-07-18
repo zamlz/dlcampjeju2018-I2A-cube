@@ -90,6 +90,9 @@ def main():
     parser.add_argument('--cpu',
             help='Set the number of cpu cores available',
             type=int, default=16)
+    parser.add_argument('--exppath',
+            help='Return the experiment folder under the specified arguments',
+            action="store_true")
 
     args = parser.parse_args()
 
@@ -100,23 +103,6 @@ def main():
         args.scramble = int(args.scramble)
     if ':' not in args.maxsteps:
         args.maxsteps = int(args.maxsteps)
-
-    # Decide whether we should use the GPU or not...
-    # Certain modes should use the GPU, waste of memory
-    if args.a2c_pd_test:
-        os.environ['CUDA_VISIBLE_DEVICES']="-1"
-
-    # We import the main stuff here, otherwise its really slow
-    import gym
-    import a2c
-    import cube_gym
-    from policy import Policies
-
-    def cube_env():
-        env = gym.make(args.env)
-        env.unwrapped._refresh(args.scramble, args.maxsteps, args.easy, args.adaptive,
-                              not args.no_orient_scramble)
-        return env
 
     # Create the logging paths
     logpath = './experiments/'
@@ -149,9 +135,33 @@ def main():
     logpath += 'entk_' + str(args.ent_coeff) + '/'
    
     if args.tag == '':
-        logpath += datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f/")
+        if args.exppath:
+            print(logpath)
+            exit()
+        else:
+            logpath += datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f/")
     else:
         logpath += args.tag + '/'
+        if args.exppath:
+            print(logpath)
+            exit()
+
+    # Decide whether we should use the GPU or not...
+    # Certain modes should use the GPU, waste of memory
+    if args.a2c_pd_test:
+        os.environ['CUDA_VISIBLE_DEVICES']="-1"
+
+    # We import the main stuff here, otherwise its really slow
+    import gym
+    import a2c
+    import cube_gym
+    from policy import Policies
+
+    def cube_env():
+        env = gym.make(args.env)
+        env.unwrapped._refresh(args.scramble, args.maxsteps, args.easy, args.adaptive,
+                              not args.no_orient_scramble)
+        return env
 
     if args.a2c:
         a2c.train(  env_fn          = cube_env,
