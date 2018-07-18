@@ -168,6 +168,7 @@ def train(env_fn=None,
     tf_config = tf.ConfigProto(
             inter_op_parallelism_threads=cpu_cores,
             intra_op_parallelism_threads=cpu_cores )
+    tf_config.gpu_options.allow_growth = True
 
     with tf.Session(config=tf_config) as sess:
         actor_critic = ActorCritic(sess, policy, ob_space, ac_space, nenvs, nsteps,
