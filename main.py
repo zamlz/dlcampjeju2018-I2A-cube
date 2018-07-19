@@ -51,10 +51,10 @@ def main():
 
     # Model Free Policy Parameteres
     parser.add_argument('--policy',
-            help='Specify the type of policy for the model free part [cnn, mlp]',
-            type=str, default='cnn')
-    parser.add_argument('--coordConv',
-            help='Use the special Coordinate Convolutional Layers',
+            help='Specify the policy architecture',
+            type=str, default='c2d+:16:3:1_h:4096:2048_pi_vf')
+    parser.add_argument('--policy-help',
+            help='Show the help dialouge to generate a policy string',
             action="store_true")
 
     # Actor Critic Arguments
@@ -95,6 +95,10 @@ def main():
             action="store_true")
 
     args = parser.parse_args()
+    if args.policy_help:
+        from policy import PolicyBuilder
+        print(PolicyBuilder.__doc__)
+        exit(0)
 
     # Verify that atleast one of the primary functions are chosen by the user
     assert sum([args.a2c, args.em, args.a2c_pd_test]) == 1, ""
@@ -111,6 +115,8 @@ def main():
         logpath += 'a2c/'
     elif args.em:
         logpath += 'em/'
+
+    logpath += args.policy + '/'
 
     logpath += args.env + '/'
 
@@ -155,7 +161,7 @@ def main():
     import gym
     import a2c
     import cube_gym
-    from policy import Policies
+    from policy import PolicyBuilder, policy_parser
 
     def cube_env():
         env = gym.make(args.env)
@@ -163,10 +169,19 @@ def main():
                               not args.no_orient_scramble)
         return env
 
+    
+    builder = policy_parser(args.policy)
+    def policy_fn(sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
+        pi = PolicyBuilder(sess=sess, ob_space=ob_space, ac_space=ac_space,
+                           nbatch=nbatch, nsteps=nsteps, reuse=reuse,
+                           build=builder)
+        return pi
+        
+
     if args.a2c:
         a2c.train(  env_fn          = cube_env,
                     spectrum        = args.spectrum,
-                    policy          = Policies[args.policy],
+                    policy          = policy_fn,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
                     max_iterations  = int(args.iters),
