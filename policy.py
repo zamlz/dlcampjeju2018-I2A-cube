@@ -132,46 +132,22 @@ is correct.
         self.X = tf.placeholder(tf.float32, [None, nw, nh, nc]) #obs
         x = self.X
 
-        bd = {
-            'conv3d' : [],
-            'conv2d' : [],
-            'dense': [],
-            'pi' : [],
-            'vf' : [],
-        }
-        for b in build:
-            if 'c3d' in b[0]:
-                bd['conv3d'].append(b)
-            elif 'c2d' in b[0]:
-                bd['conv2d'].append(b)
-            elif 'h' in b[0]:
-                bd['dense'].append(b)
-            elif 'pi' in b[0]:
-                bd['pi'].append(b)
-            elif 'vf' in b[0]:
-                bd['vf'].append(b)
-            else:
-                pass
-        assert len(bd['dense']) == 1, "There should only be a single dense layer"
-        assert len(bd['pi']) == len(bd['vf']) == 1, "Missing Value and Policy Function outputs"
-
-
         # Construction of the model
         with tf.variable_scope("model", reuse=reuse):
 
-            for b in bd['conv3d']:
+            for b in build['conv3d']:
                 x = build_conv3d(x, b)
 
-            for b in bd['conv2d']:
+            for b in build['conv2d']:
                 x = build_conv2d(x, b)
 
-            h = build_dense(x, bd['dense'][0])
+            h = build_dense(x, build['dense'][0])
 
             with tf.variable_scope('pi'):
-                pi = build_dense_vfp(h, nact, bd['pi'][0])
+                pi = build_dense_vfp(h, nact, build['pi'][0])
 
             with tf.variable_scope('v'):
-                vf = build_dense_vfp(h, 1, bd['vf'][0])[:, 0]
+                vf = build_dense_vfp(h, 1, build['vf'][0])[:, 0]
 
         # Sample action. `pi` is like the logits
         u = tf.random_uniform(tf.shape(pi))
@@ -215,5 +191,27 @@ is correct.
 def policy_parser(builder):
     builder = builder.split('_')
     builder = [ b.split(':') for b in builder ]
-    return builder
+    bd = {
+        'conv3d' : [],
+        'conv2d' : [],
+        'dense': [],
+        'pi' : [],
+        'vf' : [],
+    }
+    for b in build:
+        if 'c3d' in b[0]:
+            bd['conv3d'].append(b)
+        elif 'c2d' in b[0]:
+            bd['conv2d'].append(b)
+        elif 'h' in b[0]:
+            bd['dense'].append(b)
+        elif 'pi' in b[0]:
+            bd['pi'].append(b)
+        elif 'vf' in b[0]:
+            bd['vf'].append(b)
+        else:
+            pass
+    assert len(bd['dense']) == 1, "There should only be a single dense layer"
+    assert len(bd['pi']) == len(bd['vf']) == 1, "Missing Value and Policy Function outputs"
+    return bd
 
