@@ -76,7 +76,7 @@ def main():
             type=float, default=0.5)
     parser.add_argument('--ent-coeff',
             help='Specify the Entropy Coefficient',
-            type=float, default=0.01)
+            type=float, default=0.05)
 
     # Other misc arguments
     parser.add_argument('--exp-root',

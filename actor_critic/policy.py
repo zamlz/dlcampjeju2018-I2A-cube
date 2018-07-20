@@ -100,18 +100,18 @@ Convolutional Network:
     '3'  represents the kernel size,
     '2'  represents the stride
 
-Dense Layers:
+Fully Connected Layers:
     
     h:4096:2048
     This creates a bunch of hidden layers. Each number in the list
     represents the size of the hidden layers. These dense layers
     are shared by both the value and policy function
 
-    p:512
+    pi:512
     This the dense layers that are unique to the policy function. The
     list of numbers represents the size of each hidden layer.
 
-    v:512
+    vf:512
     This the dense layers that are unique to the value function. The
     list of numbers represents the size of each hidden layer.
 
