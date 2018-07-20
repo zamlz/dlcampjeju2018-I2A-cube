@@ -84,6 +84,9 @@ def main():
             type=float, default=0.01)
 
     # Other misc arguments
+    parser.add_argument('--exp-root',
+            help='Set the root path for all experiments',
+            type=str, default='./experiment/')
     parser.add_argument('--log-interval',
             help='Set the logging interval',
             type=int, default=100)
@@ -109,7 +112,7 @@ def main():
         args.maxsteps = int(args.maxsteps)
 
     # Create the logging paths
-    logpath = './experiments/'
+    logpath = args.exp_root 
 
     if args.a2c:
         logpath += 'a2c/'
