@@ -198,7 +198,7 @@ def policy_parser(builder):
         'pi' : [],
         'vf' : [],
     }
-    for b in build:
+    for b in builder:
         if 'c3d' in b[0]:
             bd['conv3d'].append(b)
         elif 'c2d' in b[0]:
