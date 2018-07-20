@@ -76,7 +76,7 @@ class ActorCritic(object):
             params = { fix_tf_name(v.name): v for v in params }
 
         # Initialize the tensorflow saver
-        self.saver = tf.train.Saver(params, max_to_keep=15)
+        self.saver = tf.train.Saver(params, max_to_keep=5)
 
     # Single training step
     def train(self, obs, rewards, masks, actions, values, depth, step, summary_op=None):
@@ -118,10 +118,10 @@ class ActorCritic(object):
         return self.step_model.value(obs)
 
     # Dump the model parameters in the specified path
-    def save(self, path, name):
+    def save(self, path, step):
         if not os.path.exists(path):
             os.makedirs(path)
-        self.saver.save(self.sess, path + '/' + name)
+        self.saver.save(self.sess, path + str(step) + '.ckpt')
 
     # Load a pretrained model
     def load(self, full_path):
@@ -145,7 +145,6 @@ def train(env_fn=None,
           alpha = 0.99,
           epsilon = 1e-5,
           log_interval=100,
-          save_interval=1e5,
           load_count=0,
           summarize=True,
           load_path=None,
@@ -196,7 +195,7 @@ def train(env_fn=None,
         final_rewards = np.zeros((nenvs, ))
 
         print('a2c Training Start!')
-        print('Model will be saved on intervals of %i' % (save_interval))
+        print('Model will be saved on intervals of %i' % (log_interval))
         for i in tqdm(range(load_count + 1, int(max_iterations) + 1), ascii=True, desc='ActorCritic'):
            
             # Create the minibatch lists
@@ -264,19 +263,9 @@ def train(env_fn=None,
             else:
                 loss, policy_loss, value_loss, policy_ent, mrew, mdp, _ = actor_critic.train(
                         mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, mb_depth, i)
-                
-            # Print some training information
-            if i % log_interval == 0 or i == 0:
-                with open(log_path + '/run.log', 'w') as runlog:
-                    print('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, Cur: %.4f, R_m: %.4f' %
-                            (i, policy_loss, value_loss, policy_ent, mdp, mrew))
-                    print(' ~ '+str(total_reward)+'\n')
-                    runlog.write('%i): pi_l: %.4f, V_l: %.4f, Ent: %.4f, Cur: %.4f, R_m: %.4f' %
-                            (i, policy_loss, value_loss, policy_ent, mdp, mrew))
-                    runlog.write(' ~ '+str(total_reward)+'\n')
 
-            if i % save_interval == 0:
-                actor_critic.save(save_path, str(i) + '.ckpt')
+            if i % log_interval == 0:
+                actor_critic.save(save_path, i)
             
         actor_critic.save(save_path, 'final.ckpt')
         print('a2c model is finished training')

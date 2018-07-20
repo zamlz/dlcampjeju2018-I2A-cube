@@ -90,7 +90,7 @@ def main():
             type=str, default='')
     parser.add_argument('--log-interval',
             help='Set the logging interval',
-            type=int, default=100)
+            type=int, default=1e3)
     parser.add_argument('--cpu',
             help='Set the number of cpu cores available',
             type=int, default=16)
@@ -224,7 +224,6 @@ def main():
                     alpha           = 0.99,
                     epsilon         = 1e-5,
                     log_interval    = args.log_interval,
-                    save_interval   = 1e3,
                     load_count      = 0,
                     summarize       = True,
                     load_path       = args.a2c_load,
