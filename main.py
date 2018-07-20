@@ -172,8 +172,13 @@ def main():
                               not args.no_orient_scramble)
         return env
 
-    
-    builder = policy_parser(args.policy)
+    builder = {}
+
+    if args.a2c_load:
+        builder = policy_parser(args.a2c_load.split('/')[3])
+    else: 
+        builder = policy_parser(args.policy)
+
     def policy_fn(sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
         pi = PolicyBuilder(sess=sess, ob_space=ob_space, ac_space=ac_space,
                            nbatch=nbatch, nsteps=nsteps, reuse=reuse,
