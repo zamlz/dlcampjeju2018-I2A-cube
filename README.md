@@ -142,7 +142,7 @@ optional arguments:
 Miscellaneous Utilities
 -----------------------
 
-The miscellaneous scripts are found in ![misc][miscfolder]. They contain useful
+The miscellaneous scripts are found in [`misc`][miscfolder]. They contain useful
 scripts which their usage will be documented here.
 
 #### fuse_bucket.sh
@@ -150,9 +150,9 @@ scripts which their usage will be documented here.
 By default the `main.py` program saves experiments to the `./experiments`
 directory. The necessary files will be automatically be created in the local
 filesystem. But lets say you wanted to save these experiments to a
-![Google Cloud Bucket][gcp-bucket]. This script will mount the GCP Bucket
-into the `./experiments` folder using ![gcsfuse][gcp-fuse]. More details for
-Google's Cloud Storage FUSE can be found ![here][gcp-fuse-details].
+[Google Cloud Bucket][gcp-bucket]. This script will mount the GCP Bucket
+into the `./experiments` folder using [gcsfuse][gcp-fuse]. More details for
+Google's Cloud Storage FUSE can be found [here][gcp-fuse-details].
 
 #### kill_fuse.sh
 
