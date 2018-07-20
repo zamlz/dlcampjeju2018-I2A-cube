@@ -3,7 +3,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from a2c import ActorCritic
+from actor_critic import ActorCritic
 
 def pd_test(env_fn, policy, load_path):
 

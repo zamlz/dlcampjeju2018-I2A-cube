@@ -22,9 +22,6 @@ def main():
     parser.add_argument('--a2c-pd-test',
             help='Test the Actor-Critic Params on a single env and show policy logits',
             action="store_true")
-    parser.add_argument('--tag',
-            help='Tag the current experiemnt',
-            type=str, default='')
 
     # Environment Arguments
     parser.add_argument('--env',
@@ -49,15 +46,13 @@ def main():
             help='Lets the environment scramble orientation as well',
             action="store_true")
 
-    # Model Free Policy Parameteres
-    parser.add_argument('--policy',
+    # Actor Critic Arguments
+    parser.add_argument('--a2c-policy',
             help='Specify the policy architecture',
             type=str, default='c2d+:16:3:1_h:4096:2048_pi_vf')
-    parser.add_argument('--policy-help',
+    parser.add_argument('--a2c-policy-help',
             help='Show the help dialouge to generate a policy string',
             action="store_true")
-
-    # Actor Critic Arguments
     parser.add_argument('--workers',
             help='Set the number of workers',
             type=int, default=16)
@@ -86,20 +81,29 @@ def main():
     # Other misc arguments
     parser.add_argument('--exp-root',
             help='Set the root path for all experiments',
-            type=str, default='./experiment/')
+            type=str, default='./experiments/')
+    parser.add_argument('--exppath',
+            help='Return the experiment folder under the specified arguments',
+            action="store_true")
+    parser.add_argument('--tag',
+            help='Tag the current experiemnt',
+            type=str, default='')
     parser.add_argument('--log-interval',
             help='Set the logging interval',
             type=int, default=100)
     parser.add_argument('--cpu',
             help='Set the number of cpu cores available',
             type=int, default=16)
-    parser.add_argument('--exppath',
-            help='Return the experiment folder under the specified arguments',
+    parser.add_argument('--no-override',
+            help='Prevent loading arguments to override default settings',
             action="store_true")
 
+    # Decode User Arguments
+    #######################################################################################
+    
     args = parser.parse_args()
-    if args.policy_help:
-        from policy import PolicyBuilder
+    if args.a2c_policy_help:
+        from actor_critic import PolicyBuilder
         print(PolicyBuilder.__doc__)
         exit(0)
 
@@ -111,7 +115,7 @@ def main():
     if ':' not in args.maxsteps:
         args.maxsteps = int(args.maxsteps)
 
-    # Create the logging paths
+    # Create the logging path
     logpath = args.exp_root 
 
     if args.a2c:
@@ -119,7 +123,10 @@ def main():
     elif args.em:
         logpath += 'em/'
 
-    logpath += args.policy + '/'
+    if args.a2c:
+        logpath += args.a2c_policy + '/'
+    else:
+        logpath += 'NULL/'
 
     logpath += args.env + '/'
 
@@ -162,34 +169,49 @@ def main():
 
     # We import the main stuff here, otherwise its really slow
     import gym
-    import a2c
     import cube_gym
-    from policy import PolicyBuilder, policy_parser
+    import actor_critic as a2c
 
+    # Store the default values of some arguments
+    scramble        = args.scramble
+    maxsteps        = args.maxsteps
+    easy            = args.easy
+    adaptive        = args.adaptive
+    orient_scramble = not args.no_orient_scramble
+    a2c_policy_def = args.a2c_policy
+
+    # Override defaults for A2C if user decides to load from filesystem
+    if (args.a2c or args.a2c_pd_test) and args.a2c_load and not args.no_override:
+        
+        a2c_load_list = args.a2c_load.split('/')
+        adaptive = False
+        easy = False
+        orient_scramble = False
+
+        for acpd in a2c_load_list:
+            if '_pi' in acpd:
+                a2c_policy_def = acpd
+            if 'adaptive' in acpd:
+                adaptive = True
+            if 'os_yes' in acpd:
+                orient_scramble = True
+            if 'easy' in acpd:
+                easy = True
+
+    # A helper function that returns the correct environment as specified with our
+    # settings chosen by the user
     def cube_env():
         env = gym.make(args.env)
-        env.unwrapped._refresh(args.scramble, args.maxsteps, args.easy, args.adaptive,
-                              not args.no_orient_scramble)
+        env.unwrapped._refresh(scramble, maxsteps, easy, adaptive, orient_scramble)
         return env
 
-    builder = {}
-
-    if args.a2c_load:
-        builder = policy_parser(args.a2c_load.split('/')[3])
-    else: 
-        builder = policy_parser(args.policy)
-
-    def policy_fn(sess, ob_space, ac_space, nbatch, nsteps, reuse=False):
-        pi = PolicyBuilder(sess=sess, ob_space=ob_space, ac_space=ac_space,
-                           nbatch=nbatch, nsteps=nsteps, reuse=reuse,
-                           build=builder)
-        return pi
-        
+    # Actor Critic Related Stuff
+    #######################################################################################
 
     if args.a2c:
         a2c.train(  env_fn          = cube_env,
                     spectrum        = args.spectrum,
-                    policy          = policy_fn,
+                    policy          = a2c_policy_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
                     max_iterations  = int(args.iters),
@@ -212,7 +234,7 @@ def main():
     
     if args.a2c_pd_test:
         a2c.pd_test(env_fn          = cube_env,
-                    policy          = policy_fn,
+                    policy          = a2c_policy_def,
                     load_path       = args.a2c_load)
 
 

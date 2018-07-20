@@ -22,7 +22,8 @@ def coord_conv(x):
 
 # A simple function to build a 3D convolutional layer
 def build_conv3d(x, instructions):
-    pass
+    print('Warning: 3D Convolutional is not yet implemented')
+    return x
 
 # A simple function to build a 2D convolutional layer
 # instructions will be off the form
@@ -31,8 +32,8 @@ def build_conv2d(x, instruction):
     if '+' in instruction[0]:
         x = coord_conv(x)
     filters     = int(instruction[1])
-    kernel_size = [int(instruction[2]),int(instruction[2])]
-    strides     = [int(instruction[3]),int(instruction[3])]
+    kernel_size = int(instruction[2])
+    strides     = int(instruction[3])
     tfactivity  = tf.nn.relu
 
     x = tf.layers.conv2d(

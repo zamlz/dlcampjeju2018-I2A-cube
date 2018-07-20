@@ -6,7 +6,9 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from a2c.util import discount_with_dones, cat_entropy, fix_tf_name
+from actor_critic.util import discount_with_dones, cat_entropy, fix_tf_name
+from actor_critic.policy import PolicyBuilder as pibuild
+from actor_critic.policy import policy_parser
 from common.multiprocessing_env import SubprocVecEnv
 
 
@@ -27,8 +29,9 @@ class ActorCritic(object):
         self.depth = tf.placeholder(tf.float32, [nbatch])
       
         # setup the models
-        self.step_model = policy(self.sess, ob_space, ac_space, nenvs, 1, reuse=False)
-        self.train_model = policy(self.sess, ob_space, ac_space, nbatch, nsteps, reuse=True)
+        pb = policy_parser(policy)
+        self.step_model = pibuild(self.sess, ob_space, ac_space, nenvs, 1, reuse=False, build=pb)
+        self.train_model = pibuild(self.sess, ob_space, ac_space, nbatch, nsteps, reuse=True, build=pb)
 
         # Negative log probs of actions
         neglogpac = tf.nn.sparse_softmax_cross_entropy_with_logits(
