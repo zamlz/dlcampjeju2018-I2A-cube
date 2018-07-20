@@ -175,7 +175,7 @@ def main():
     builder = {}
 
     if args.a2c_load:
-        builder = policy_parser(args.a2c_load.split('/')[3])
+        builder = policy_parser(args.a2c_load.split('/')[2])
     else: 
         builder = policy_parser(args.policy)
 
@@ -212,7 +212,7 @@ def main():
     
     if args.a2c_pd_test:
         a2c.pd_test(env_fn          = cube_env,
-                    policy          = Policies[args.policy],
+                    policy          = policy_fn,
                     load_path       = args.a2c_load)
 
 
