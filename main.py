@@ -175,7 +175,7 @@ def main():
     builder = {}
 
     if args.a2c_load:
-        builder = policy_parser(args.a2c_load.split('/')[2])
+        builder = policy_parser(args.a2c_load.split('/')[3])
     else: 
         builder = policy_parser(args.policy)
 
