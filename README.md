@@ -77,11 +77,98 @@ While the environment supports any n-order cube, testing will only be done of th
 the policy can become when allowing the agent to control the orientation of the
 environment.
 
+Usage
+-----
+
+```
+usage: main.py [-h] [--a2c] [--em] [--a2c-pd-test] [--env ENV]
+               [--scramble SCRAMBLE] [--maxsteps MAXSTEPS] [--adaptive]
+               [--spectrum] [--easy] [--no-orient-scramble]
+               [--a2c-policy A2C_POLICY] [--a2c-policy-help]
+               [--workers WORKERS] [--nsteps NSTEPS] [--iters ITERS]
+               [--a2c-load A2C_LOAD] [--lr LR] [--pg-coeff PG_COEFF]
+               [--vf-coeff VF_COEFF] [--ent-coeff ENT_COEFF]
+               [--exp-root EXP_ROOT] [--exppath] [--tag TAG]
+               [--log-interval LOG_INTERVAL] [--cpu CPU] [--no-override]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --a2c                 Train the Actor-Critic Agent (default: False)
+  --em                  Train the Environment Model (default: False)
+  --a2c-pd-test         Test the Actor-Critic Params on a single env and show
+                        policy logits (default: False)
+  --env ENV             Environment ID (default: cube-x2-v0)
+  --scramble SCRAMBLE   Set the max scramble size. format: size (or)
+                        initial:target:episodes (default: 1)
+  --maxsteps MAXSTEPS   Set the max step size. format: size (or)
+                        initial:target:episodes (default: 1)
+  --adaptive            Turn on the adaptive curriculum (default: False)
+  --spectrum            Setup up a spectrum of environments with different
+                        difficulties (default: False)
+  --easy                Make the environment extremely easy; No orientation
+                        change, only R scrabmle (default: False)
+  --no-orient-scramble  Lets the environment scramble orientation as well
+                        (default: False)
+  --a2c-policy A2C_POLICY
+                        Specify the policy architecture (default:
+                        c2d+:16:3:1_h:4096:2048_pi_vf)
+  --a2c-policy-help     Show the help dialouge to generate a policy string
+                        (default: False)
+  --workers WORKERS     Set the number of workers (default: 16)
+  --nsteps NSTEPS       Number of environment steps per training iteration per
+                        worker (default: 40)
+  --iters ITERS         Number of training iterations (default: 50000.0)
+  --a2c-load A2C_LOAD   Load Path for the Actor-Critic Parameters (default:
+                        None)
+  --lr LR               Specify the learning rate to use (default: 0.0007)
+  --pg-coeff PG_COEFF   Specify the Policy Gradient Loss Coefficient (default:
+                        1.0)
+  --vf-coeff VF_COEFF   Specify the Value Function Loss Coefficient (default:
+                        0.5)
+  --ent-coeff ENT_COEFF
+                        Specify the Entropy Coefficient (default: 0.05)
+  --exp-root EXP_ROOT   Set the root path for all experiments (default:
+                        ./experiments/)
+  --exppath             Return the experiment folder under the specified
+                        arguments (default: False)
+  --tag TAG             Tag the current experiemnt (default: )
+  --log-interval LOG_INTERVAL
+                        Set the logging interval (default: 1000.0)
+  --cpu CPU             Set the number of cpu cores available (default: 16)
+  --no-override         Prevent loading arguments to override default settings
+                        (default: False)
+```
+
+Miscellaneous Utilities
+-----------------------
+
+The miscellaneous scripts are found in ![misc][miscfolder]. They contain useful
+scripts which their usage will be documented here.
+
+#### fuse_bucket.sh
+
+By default the `main.py` program saves experiments to the `./experiments`
+directory. The necessary files will be automatically be created in the local
+filesystem. But lets say you wanted to save these experiments to a
+![Google Cloud Bucket][gcp-bucket]. This script will mount the GCP Bucket
+into the `./experiments` folder using ![gcsfuse][gcp-fuse]. More details for
+Google's Cloud Storage FUSE can be found ![here][gcp-fuse-details].
+
+#### kill_fuse.sh
+
+Just a script to unmount the Google Cloud FUSE mentioned earlier.
 
 
 [i2a-paper]: https://arxiv.org/abs/1707.06203v2
 
+[gcp-bucket]: https://cloud.google.com/storage/
+[gcp-fuse]: https://github.com/GoogleCloudPlatform/gcsfuse/
+[gcp-fuse-details]: https://cloud.google.com/storage/docs/gcs-fuse
+
+[miscfolder]: https://github.com/zamlz/dlcampjeju2018-I2A-cube/tree/master/misc
 [cube-gif]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/cube_solve.gif
 [env-model]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/env_model.png
 [full-i2a]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/full_i2a.png
 [imagine-core]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/imagine.png
+
+

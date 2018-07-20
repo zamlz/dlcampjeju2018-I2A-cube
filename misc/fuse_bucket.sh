@@ -1,3 +1,5 @@
 #!/bin/sh
 
-gcsfuse experiments-rl ./experiments
+GS_BUCKET='experiments-rl'
+
+gcsfuse ${GS_BUCKET} ./experiments
