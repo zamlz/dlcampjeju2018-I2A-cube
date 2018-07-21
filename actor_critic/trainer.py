@@ -76,7 +76,7 @@ class ActorCritic(object):
             params = { fix_tf_name(v.name): v for v in params }
 
         # Initialize the tensorflow saver
-        self.saver = tf.train.Saver(params, max_to_keep=5)
+        self.saver = tf.train.Saver(params, max_to_keep=1000000000)
 
     # Single training step
     def train(self, obs, rewards, masks, actions, values, depth, step, summary_op=None):
