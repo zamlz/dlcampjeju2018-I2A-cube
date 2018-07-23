@@ -140,7 +140,7 @@ is correct.
         nw, nh, nc = ob_space
         nact = ac_space.n
 
-        self.X = tf.placeholder(tf.float32, [None, nw, nh, nc]) #obs
+        self.X = tf.placeholder(tf.float32, [None, nw, nh, nc], name='observations') #obs
         x = self.X
 
         # Construction of the model

@@ -23,10 +23,10 @@ class ActorCritic(object):
         nbatch = nenvs * nsteps
 
         # Actions, Advantages, and Reward
-        self.actions = tf.placeholder(tf.int32, [nbatch])
-        self.advantages = tf.placeholder(tf.float32, [nbatch])
-        self.rewards = tf.placeholder(tf.float32, [nbatch])
-        self.depth = tf.placeholder(tf.float32, [nbatch])
+        self.actions = tf.placeholder(tf.int32, [nbatch], name='actions')
+        self.advantages = tf.placeholder(tf.float32, [nbatch], name='advantages')
+        self.rewards = tf.placeholder(tf.float32, [nbatch], name='rewards')
+        self.depth = tf.placeholder(tf.float32, [nbatch], name='scramble_depth')
       
         # setup the models
         pb = policy_parser(policy)

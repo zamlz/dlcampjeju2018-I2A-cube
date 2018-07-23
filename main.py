@@ -91,10 +91,10 @@ def main():
             type=str, default=None)
     parser.add_argument('--obs-coeff',
             help='Specify the Predicted Observation Loss Coefficient',
-            type=float, default=0.5)
+            type=float, default=1.0)
     parser.add_argument('--rew-coeff',
             help='Specify the Predicted Reward Loss Coefficient',
-            type=float, default=0.5)
+            type=float, default=100)
 
     # Other misc arguments
     parser.add_argument('--exp-root',

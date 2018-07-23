@@ -20,8 +20,8 @@ class EnvironmentModel(object):
         nw, nh, nc = ob_space
 
         # Setup targets
-        self.target_obs = tf.placeholder(tf.float32, [None, nw, nh, nc])
-        self.target_rew = tf.placeholder(tf.float32, [None])
+        self.target_obs = tf.placeholder(tf.float32, [None, nw, nh, nc], name='target_observations')
+        self.target_rew = tf.placeholder(tf.float32, [None], name='target_rewards')
 
         # Setup the Graph for the Environment Model
         self.model = EMBuilder(sess, ob_space, ac_space, summarize=summarize)

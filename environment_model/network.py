@@ -31,23 +31,23 @@ class EMBuilder(object):
             nw, nh, nc = ob_space
             self.nact = ac_space.n
 
-            self.obs = tf.placeholder(tf.float32, [None, nw, nh, nc])
-            self.a = tf.placeholder(tf.uint8, [None])
+            self.obs = tf.placeholder(tf.float32, [None, nw, nh, nc], name='observations')
+            self.a = tf.placeholder(tf.uint8, [None], name='actions')
 
             x = self.obs
 
             # Construction of the network
             with tf.variable_scope("env_model"): 
                 
-                x = concat_actions(x, self.a , self.nact)
               
                 # Terrible testing code
                 x = tf.layers.flatten(x)
+                x = concat_actions(x, self.a , self.nact)
                 x = tf.layers.dense(x, 4096, activation=tf.nn.relu)
                 x = tf.layers.dense(x, 4096, activation=tf.nn.relu)
                 x = tf.layers.dense(x, 4096, activation=tf.nn.relu)
             
-                pred_rew = tf.layers.dense(x, 1, activation=None)
+                pred_rew = tf.layers.dense(x, 1, activation=tf.nn.sigmoid)
                 pred_obs = tf.layers.dense(x, nw*nh*nc, activation=tf.nn.sigmoid)
 
                 self.pred_obs = tf.reshape(pred_obs, [-1, nw, nh, nc])
