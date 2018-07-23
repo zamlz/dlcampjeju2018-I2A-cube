@@ -25,7 +25,7 @@ class RandomActorCritic(ActorCritic):
 
     def act(self, obs, stochastic=True):
         a, v, n = self.step_model.step(obs, stochastic=stochastic)
-        if self.np_random.sample > self.epsilon:
+        if np.random.sample() > self.epsilon:
             return a, v, n
         else:
             return np.random.randint(self.nact, size=a.shape), v, n
@@ -35,7 +35,9 @@ class RandomActorCritic(ActorCritic):
 def play_games(a2c, envs, nsteps):
     s = envs.reset()
     for i in range(nsteps):
-        a, _, _ = a2c.act(states)
-        ns, r, d, _ = envs.step(a)
-        yield i, s, a, r, ns, d
+        a, _, _ = a2c.act(s)
+        ns, r, d, info = envs.step(a)
+        true_ns = [ x['obs'] for x in info ]
+        true_ns = np.stack(true_ns, axis=0)
+        yield s, a, r, true_ns, d
         s = ns

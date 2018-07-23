@@ -58,7 +58,7 @@ def build_conv2d(x, instruction):
 # Build a dense network
 def build_dense(x, instruction):
 
-    tfactivity=tf.nn.tanh
+    tfactivity=tf.nn.relu
     dense = [ int(d) for d in instruction[1:] ]
 
     x = tf.layers.flatten(x)
@@ -72,13 +72,13 @@ def build_dense(x, instruction):
 # and the policy
 def build_dense_vfp(x, n, instruction):
 
-    tfactivity=tf.nn.tanh
+    tfactivity=tf.nn.relu
     dense = [ int(d) for d in instruction[1:] ]
 
     x = tf.layers.flatten(x)
     for d in dense:
         x = tf.layers.dense(x, d, activation=tfactivity)
-    x = tf.layers.dense(x, n, activation=tf.nn.relu)
+    x = tf.layers.dense(x, n, activation=None)
     return x
 
 

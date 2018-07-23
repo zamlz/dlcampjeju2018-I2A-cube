@@ -89,6 +89,12 @@ def main():
     parser.add_argument('--em-load',
             help='Load Path for the Environment-Model Weights',
             type=str, default=None)
+    parser.add_argument('--obs-coeff',
+            help='Specify the Predicted Observation Loss Coefficient',
+            type=float, default=0.5)
+    parser.add_argument('--rew-coeff',
+            help='Specify the Predicted Reward Loss Coefficient',
+            type=float, default=0.5)
 
     # Other misc arguments
     parser.add_argument('--exp-root',
@@ -264,7 +270,7 @@ def main():
                     policy          = a2c_policy_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
-                    max_iterations  = int(args.iters),
+                    max_iters       = int(args.iters),
                     gamma           = 0.99,
                     pg_coeff        = args.pg_coeff, 
                     vf_coeff        = args.vf_coeff,
@@ -274,7 +280,6 @@ def main():
                     alpha           = 0.99,
                     epsilon         = 1e-5,
                     log_interval    = args.log_interval,
-                    load_count      = 0,
                     summarize       = True,
                     load_path       = args.a2c_load,
                     log_path        = logpath, 
@@ -295,10 +300,11 @@ def main():
                     a2c_policy      = a2c_policy_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
-                    max_iterations  = int(args.iters),
+                    max_iters       = int(args.iters),
+                    obs_coeff       = args.obs_coeff,
+                    rew_coeff       = args.rew_coeff,
                     lr              = args.lr,
                     log_interval    = args.log_interval,
-                    load_count      = 0,
                     summarize       = True,
                     em_load_path    = args.a2c_load,
                     a2c_load_path   = args.a2c_load,

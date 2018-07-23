@@ -76,7 +76,7 @@ class ActorCritic(object):
         #    params = { fix_tf_name(v.name): v for v in params }
 
         # Initialize the tensorflow saver
-        self.saver = tf.train.Saver(params, max_to_keep=1000000000)
+        self.saver = tf.train.Saver(self.params, max_to_keep=1000000000)
 
     # Single training step
     def train(self, obs, rewards, masks, actions, values, depth, step, summary_op=None):
@@ -135,7 +135,7 @@ def train(env_fn=None,
           policy=None,
           nenvs=16,
           nsteps=100,
-          max_iterations=1e6,
+          max_iters=1e6,
           gamma=0.99,
           pg_coeff = 1.0,
           vf_coeff = 0.5,
@@ -145,7 +145,6 @@ def train(env_fn=None,
           alpha = 0.99,
           epsilon = 1e-5,
           log_interval=100,
-          load_count=0,
           summarize=True,
           load_path=None,
           log_path=None,
@@ -177,6 +176,7 @@ def train(env_fn=None,
                                    pg_coeff, vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
 
+        load_count = 0
         if load_path is not None:
             actor_critic.load(load_path)
             print('Loaded a2c')
@@ -196,7 +196,7 @@ def train(env_fn=None,
 
         print('a2c Training Start!')
         print('Model will be saved on intervals of %i' % (log_interval))
-        for i in tqdm(range(load_count + 1, int(max_iterations) + 1), ascii=True, desc='ActorCritic'):
+        for i in tqdm(range(load_count + 1, int(max_iters) + 1), ascii=True, desc='ActorCritic'):
            
             # Create the minibatch lists
             mb_obs, mb_rewards, mb_actions, mb_values, mb_dones, mb_depth = [], [], [], [], [], []
@@ -206,8 +206,6 @@ def train(env_fn=None,
                
                 # Get the actions and values from the actor critic, we don't need neglogp
                 actions, values, neglogp = actor_critic.act(obs)
-                print(actions)
-                print(actions.shape)
                
                 mb_obs.append(np.copy(obs))
                 mb_actions.append(actions)
