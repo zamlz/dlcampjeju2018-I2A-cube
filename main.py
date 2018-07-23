@@ -181,6 +181,7 @@ def main():
         logpath += 'entk_' + str(args.ent_coeff) + '/'
   
     if args.em:
+        logpath += 'loss_' + str(args.em_loss) + '/'
         logpath += 'obk_' + str(args.obs_coeff) + '/'
         logpath += 'rwk_' + str(args.rew_coeff) + '/'
 
