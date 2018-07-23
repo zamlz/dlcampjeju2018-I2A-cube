@@ -71,9 +71,9 @@ class ActorCritic(object):
         # fix tf scopes if we are loading a scope that is different from the saved instance
         #name_scope = tf.contrib.framework.get_name_scope()
         #if len(name_scope) != 0:
-        #    params = { fix_tf_name(v.name, name_scope): v for v in params }
+        #    self.params = { fix_tf_name(v.name, name_scope): v for v in self.params }
         #else:
-        #    params = { fix_tf_name(v.name): v for v in params }
+        #    self.params = { fix_tf_name(v.name): v for v in self.params }
 
         # Initialize the tensorflow saver
         self.saver = tf.train.Saver(self.params, max_to_keep=5)

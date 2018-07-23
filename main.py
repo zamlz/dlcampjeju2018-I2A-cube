@@ -151,7 +151,7 @@ def main():
 
     if args.a2c:
         logpath += args.a2c_policy + '/'
-    if args.em:
+    elif args.em:
         logpath += args.em_arch + '/'
     else:
         logpath += 'NULL/'

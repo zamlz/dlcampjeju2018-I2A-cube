@@ -13,7 +13,8 @@ from common.multiprocessing_env import SubprocVecEnv
 
 class EnvironmentModel(object):
 
-    def __init__(self, sess, em_arch, ob_space, ac_space, loss_fn, obs_coeff, rew_coeff, summarize):
+    def __init__(self, sess, em_arch, ob_space, ac_space, loss_fn='mse', lr=0.001,
+                 obs_coeff=1.0, rew_coeff=1.0, summarize=False):
         
         self.sess = sess
         self.nact = ac_space.n
@@ -43,7 +44,7 @@ class EnvironmentModel(object):
         grads = list(zip(grads, self.params))
 
         # Setup the optimizer
-        trainer = tf.train.AdamOptimizer()
+        trainer = tf.train.AdamOptimizer(learning_rate=lr)
         self.opt = trainer.apply_gradients(grads)
 
         if summarize:
@@ -139,7 +140,7 @@ def train(env_fn=None,
             print('WARNING: No Actor Critic Model loaded. Using Random Agent')
 
         env_model = EnvironmentModel(sess, em_arch, ob_space, ac_space, loss,
-                                     obs_coeff, rew_coeff, summarize)
+                                     lr, obs_coeff, rew_coeff, summarize)
 
         load_count = 0
         if em_load_path is not None:
