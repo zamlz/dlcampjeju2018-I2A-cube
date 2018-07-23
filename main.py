@@ -89,6 +89,9 @@ def main():
     parser.add_argument('--em-load',
             help='Load Path for the Environment-Model Weights',
             type=str, default=None)
+    parser.add_argument('--em-loss',
+            help='Specify the loss function for training the Env Model [mse,ent]',
+            type=str, default='mse')
     parser.add_argument('--obs-coeff',
             help='Specify the Predicted Observation Loss Coefficient',
             type=float, default=1.0)
@@ -171,10 +174,16 @@ def main():
 
     logpath += 'iter_' + str(args.iters) + '/'
     logpath += 'lr_' + str(args.lr) + '/'
-    logpath += 'pgk_' + str(args.pg_coeff) + '/'
-    logpath += 'vfk_' + str(args.vf_coeff) + '/'
-    logpath += 'entk_' + str(args.ent_coeff) + '/'
-   
+    
+    if args.a2c:
+        logpath += 'pgk_' + str(args.pg_coeff) + '/'
+        logpath += 'vfk_' + str(args.vf_coeff) + '/'
+        logpath += 'entk_' + str(args.ent_coeff) + '/'
+  
+    if args.em:
+        logpath += 'obk_' + str(args.obs_coeff) + '/'
+        logpath += 'rwk_' + str(args.rew_coeff) + '/'
+
     if args.tag == '':
         if args.exppath:
             print(logpath)
@@ -306,6 +315,7 @@ def main():
                     obs_coeff       = args.obs_coeff,
                     rew_coeff       = args.rew_coeff,
                     lr              = args.lr,
+                    loss            = args.em_loss,
                     log_interval    = args.log_interval,
                     summarize       = True,
                     em_load_path    = args.a2c_load,

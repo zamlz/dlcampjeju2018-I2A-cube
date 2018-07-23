@@ -13,7 +13,7 @@ from common.multiprocessing_env import SubprocVecEnv
 
 class EnvironmentModel(object):
 
-    def __init__(self, sess, em_arch, ob_space, ac_space, obs_coeff, rew_coeff, summarize):
+    def __init__(self, sess, em_arch, ob_space, ac_space, loss_fn, obs_coeff, rew_coeff, summarize):
         
         self.sess = sess
         self.nact = ac_space.n
@@ -24,13 +24,16 @@ class EnvironmentModel(object):
         self.target_rew = tf.placeholder(tf.float32, [None], name='target_rewards')
 
         # Setup the Graph for the Environment Model
-        self.model = EMBuilder(sess, ob_space, ac_space, summarize=summarize)
+        em_arch = em_parser(em_arch)
+        self.model = EMBuilder(sess, em_arch, ob_space, ac_space, summarize=summarize)
          
-        # Compute the losses
-        #self.obs_loss = tf.losses.softmax_cross_entropy(self.target_obs, self.model.pred_obs)
-        #self.rew_loss = tf.losses.softmax_cross_entropy(self.target_rew, self.model.pred_rew)
-        self.obs_loss = tf.reduce_mean(tf.square(self.target_obs - self.model.pred_obs) / 2.0)
-        self.rew_loss = tf.reduce_mean(tf.square(self.target_rew - self.model.pred_rew) / 2.0)
+        # Compute the losses (defaults to MSE)
+        if loss_fn is 'ent':
+            self.obs_loss = tf.losses.softmax_cross_entropy(self.target_obs, self.model.pred_obs)
+            self.rew_loss = tf.losses.softmax_cross_entropy(self.target_rew, self.model.pred_rew)
+        else:
+            self.obs_loss = tf.reduce_mean(tf.square(self.target_obs - self.model.pred_obs) / 2.0)
+            self.rew_loss = tf.reduce_mean(tf.square(self.target_rew - self.model.pred_rew) / 2.0)
         self.loss = (obs_coeff*self.obs_loss) + (rew_coeff*self.rew_loss)
 
         # Find the model parameters
@@ -48,7 +51,7 @@ class EnvironmentModel(object):
             tf.summary.scalar('Observation Loss', self.obs_loss)
             tf.summary.scalar('Reward Loss', self.rew_loss)
 
-        self.saver = tf.train.Saver(self.params, max_to_keep=100000000)
+        self.saver = tf.train.Saver(self.params, max_to_keep=5)
 
     # Single training step
     def train(self, obs, actions, tar_obs, tar_rew, summary_op=None):
@@ -96,6 +99,7 @@ def train(env_fn=None,
           obs_coeff = 0.5,
           rew_coeff = 0.5,
           lr = 7e-4,
+          loss='mse',
           log_interval = 100,
           summarize=True,
           em_load_path=None,
@@ -134,7 +138,8 @@ def train(env_fn=None,
             actor_critic.epsilon = -1
             print('WARNING: No Actor Critic Model loaded. Using Random Agent')
 
-        env_model = EnvironmentModel(sess, em_arch, ob_space, ac_space, obs_coeff, rew_coeff, summarize)
+        env_model = EnvironmentModel(sess, em_arch, ob_space, ac_space, loss,
+                                     obs_coeff, rew_coeff, summarize)
 
         load_count = 0
         if em_load_path is not None:
@@ -173,5 +178,5 @@ def train(env_fn=None,
             if i % log_interval == 0:
                 env_model.save(log_path, i)
 
-        env_model.save(log_path, 'final.ckpt')
+        env_model.save(log_path, 'final')
         print('Environment Model is finished training')

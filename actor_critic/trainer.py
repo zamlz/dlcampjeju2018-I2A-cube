@@ -76,7 +76,7 @@ class ActorCritic(object):
         #    params = { fix_tf_name(v.name): v for v in params }
 
         # Initialize the tensorflow saver
-        self.saver = tf.train.Saver(self.params, max_to_keep=1000000000)
+        self.saver = tf.train.Saver(self.params, max_to_keep=5)
 
     # Single training step
     def train(self, obs, rewards, masks, actions, values, depth, step, summary_op=None):
@@ -267,7 +267,7 @@ def train(env_fn=None,
             if i % log_interval == 0:
                 actor_critic.save(log_path, i)
             
-        actor_critic.save(log_path, 'final.ckpt')
+        actor_critic.save(log_path, 'final')
         print('a2c model is finished training')
 
 

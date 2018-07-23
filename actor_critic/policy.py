@@ -149,7 +149,6 @@ is correct.
             with tf.variable_scope('conv_layers'):
                 for b in build['conv3d']:
                     x = build_conv3d(x, b)
-            
                 for b in build['conv2d']:
                     x = build_conv2d(x, b)
             
