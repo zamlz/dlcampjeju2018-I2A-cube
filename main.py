@@ -94,7 +94,7 @@ def main():
             type=float, default=1.0)
     parser.add_argument('--rew-coeff',
             help='Specify the Predicted Reward Loss Coefficient',
-            type=float, default=100)
+            type=float, default=1.0)
 
     # Other misc arguments
     parser.add_argument('--exp-root',

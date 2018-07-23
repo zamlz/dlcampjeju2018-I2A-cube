@@ -47,8 +47,8 @@ class EMBuilder(object):
                 x = tf.layers.dense(x, 4096, activation=tf.nn.relu)
                 x = tf.layers.dense(x, 4096, activation=tf.nn.relu)
             
-                pred_rew = tf.layers.dense(x, 1, activation=tf.nn.sigmoid)
-                pred_obs = tf.layers.dense(x, nw*nh*nc, activation=tf.nn.sigmoid)
+                pred_rew = tf.layers.dense(x, 1, activation=tf.nn.relu)
+                pred_obs = tf.layers.dense(x, nw*nh*nc, activation=tf.nn.relu)
 
                 self.pred_obs = tf.reshape(pred_obs, [-1, nw, nh, nc])
                 self.pred_rew = tf.reshape(pred_rew, [-1])
