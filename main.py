@@ -82,7 +82,7 @@ def main():
     # Environment Model Arguments
     parser.add_argument('--em-arch',
             help='Specify the environment model architecture',
-            type=str, default='')
+            type=str, default='h:4096:4096:4096')
     parser.add_argument('--em-arch-help',
             help='Show the help dialouge to generate a em arch string',
             action="store_true")
@@ -148,6 +148,8 @@ def main():
 
     if args.a2c:
         logpath += args.a2c_policy + '/'
+    if args.em:
+        logpath += args.em_arch + '/'
     else:
         logpath += 'NULL/'
 
