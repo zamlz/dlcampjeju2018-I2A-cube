@@ -14,19 +14,29 @@ def main():
     parser.add_argument('--a2c',
             help='Train the Actor-Critic Agent',
             action="store_true")
+    parser.add_argument('--a2c-pd-test',
+            help='Test the Actor-Critic Params on a single env and show policy logits',
+            action="store_true")
     parser.add_argument('--em',
             help='Train the Environment Model',
             action="store_true")
 
-    # Secondary Tasks
-    parser.add_argument('--a2c-pd-test',
-            help='Test the Actor-Critic Params on a single env and show policy logits',
-            action="store_true")
+    # General Arguments
+    parser.add_argument('--iters',
+            help='Number of training iterations',
+            type=float, default=5e4)
+
 
     # Environment Arguments
     parser.add_argument('--env',
             help='Environment ID',
             default='cube-x2-v0')
+    parser.add_argument('--workers',
+            help='Set the number of workers',
+            type=int, default=16)
+    parser.add_argument('--nsteps',
+            help='Number of environment steps per training iteration per worker',
+            type=int, default=40)
     parser.add_argument('--scramble',
             help='Set the max scramble size. format: size (or) initial:target:episodes',
             type=str, default='1')
@@ -53,17 +63,8 @@ def main():
     parser.add_argument('--a2c-policy-help',
             help='Show the help dialouge to generate a policy string',
             action="store_true")
-    parser.add_argument('--workers',
-            help='Set the number of workers',
-            type=int, default=16)
-    parser.add_argument('--nsteps',
-            help='Number of environment steps per training iteration per worker',
-            type=int, default=40)
-    parser.add_argument('--iters',
-            help='Number of training iterations',
-            type=float, default=5e4)
     parser.add_argument('--a2c-load',
-            help='Load Path for the Actor-Critic Parameters',
+            help='Load Path for the Actor-Critic Weights',
             type=str, default=None)
     parser.add_argument('--lr',
             help='Specify the learning rate to use',
@@ -77,6 +78,17 @@ def main():
     parser.add_argument('--ent-coeff',
             help='Specify the Entropy Coefficient',
             type=float, default=0.05)
+
+    # Environment Model Arguments
+    parser.add_argument('--em-arch',
+            help='Specify the environment model architecture',
+            type=str, default='')
+    parser.add_argument('--em-arch-help',
+            help='Show the help dialouge to generate a em arch string',
+            action="store_true")
+    parser.add_argument('--em-load',
+            help='Load Path for the Environment-Model Weights',
+            type=str, default=None)
 
     # Other misc arguments
     parser.add_argument('--exp-root',
@@ -105,6 +117,11 @@ def main():
     if args.a2c_policy_help:
         from actor_critic import PolicyBuilder
         print(PolicyBuilder.__doc__)
+        exit(0)
+
+    if args.em_arch_help:
+        from environment_model import EMBuilder
+        print(EMBuilder.__doc__)
         exit(0)
 
     # Verify that atleast one of the primary functions are chosen by the user
@@ -168,19 +185,23 @@ def main():
         os.environ['CUDA_VISIBLE_DEVICES']="-1"
 
     # We import the main stuff here, otherwise its really slow
+    # to view the help dialouges
     import gym
     import cube_gym
     import actor_critic as a2c
+    import environment_model as em
 
     # Store the default values of some arguments
     scramble        = args.scramble
     maxsteps        = args.maxsteps
     easy            = args.easy
     adaptive        = args.adaptive
+    spectrum        = args.spectrum
     orient_scramble = not args.no_orient_scramble
     a2c_policy_def = args.a2c_policy
+    em_arch_def = args.em_arch
 
-    # Override defaults for A2C if user decides to load from filesystem
+    # Override defaults for A2C if user decides to load weights from filesystem
     if (args.a2c or args.a2c_pd_test) and args.a2c_load and not args.no_override:
         
         a2c_load_list = args.a2c_load.split('/')
@@ -193,9 +214,38 @@ def main():
                 a2c_policy_def = acpd
             if 'adaptive' in acpd:
                 adaptive = True
+            if 'spectrum' in acpd:
+                spectrum = True
             if 'os_yes' in acpd:
                 orient_scramble = True
             if 'easy' in acpd:
+                easy = True
+
+    # If we are doing a2c pd testing, then we want to use the scramble and maxsteps
+    # passed via the command line and not the trained environment defaults
+    if args.a2c_pd_test:
+        adaptive = False
+        spectrum = False
+        easy = False
+        scramble = args.scramble
+        maxsteps = args.maxsteps
+
+    # Override defaults for Environment Model if user decides to load weights form FS
+    if args.em and args.em_load and not args.no_override:
+        
+        em_load_list = args.em_load.split('/')
+        adaptive = False
+        easy = False
+        orient_scramble = False
+
+        for empd in em_load_list:
+            if 'adaptive' in empd:
+                adaptive = True
+            if 'spectrum' in empd:
+                spectrum = True
+            if 'os_yes' is empd:
+                orient_scramble = True
+            if 'easy' is acpd:
                 easy = True
 
     # A helper function that returns the correct environment as specified with our
@@ -210,7 +260,7 @@ def main():
 
     if args.a2c:
         a2c.train(  env_fn          = cube_env,
-                    spectrum        = args.spectrum,
+                    spectrum        = spectrum,
                     policy          = a2c_policy_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
@@ -227,7 +277,6 @@ def main():
                     load_count      = 0,
                     summarize       = True,
                     load_path       = args.a2c_load,
-                    save_path       = logpath,
                     log_path        = logpath, 
                     cpu_cores       = args.cpu)
     
@@ -235,6 +284,27 @@ def main():
         a2c.pd_test(env_fn          = cube_env,
                     policy          = a2c_policy_def,
                     load_path       = args.a2c_load)
+
+    # Environment Model Related Stuff
+    #######################################################################################
+
+    if args.em:
+        em.train(   env_fn          = cube_env,
+                    spectrum        = spectrum,
+                    em_arch         = em_arch_def,
+                    a2c_policy      = a2c_policy_def,
+                    nenvs           = args.workers,
+                    nsteps          = args.nsteps,
+                    max_iterations  = int(args.iters),
+                    lr              = args.lr,
+                    log_interval    = args.log_interval,
+                    load_count      = 0,
+                    summarize       = True,
+                    em_load_path    = args.a2c_load,
+                    a2c_load_path   = args.a2c_load,
+                    log_path        = logpath, 
+                    cpu_cores       = args.cpu)
+    
 
 
 if __name__ == '__main__':

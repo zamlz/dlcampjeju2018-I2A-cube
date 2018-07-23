@@ -148,7 +148,7 @@ class CubeEnv(gym.Env):
         
         img = self._genImgStateOneHot()
 
-        return img, reward, done, {'scramble_depth': self.scramble_depth}
+        return img, reward, done, {'scramble_depth': self.scramble_depth, 'obs': img}
 
     # Reset the environment
     def reset(self, *args, **kwargs):

@@ -15,11 +15,11 @@ from common.multiprocessing_env import SubprocVecEnv
 class ActorCritic(object):
 
     def __init__(self, sess, policy, ob_space, ac_space, nenvs, nsteps,
-                 pg_coeff, vf_coeff, ent_coeff, max_grad_norm, lr, alpha, epsilon,
-                 summarize):
+                 pg_coeff=1.0, vf_coeff=0.5, ent_coeff=0.01, max_grad_norm=0.5,
+                 lr=7e-4, alpha=0.99, epsilon=1e-5, summarize=False):
 
         self.sess = sess
-        nact = ac_space.n
+        self.nact = ac_space.n
         nbatch = nenvs * nsteps
 
         # Actions, Advantages, and Reward
@@ -47,13 +47,13 @@ class ActorCritic(object):
         self.mean_depth = tf.reduce_mean(self.depth)
 
         # Find the model parameters and their gradients
-        with tf.variable_scope('model'):
-            params = tf.trainable_variables()
-        grads = tf.gradients(self.loss, params)
+        with tf.variable_scope('a2c_model'):
+            self.params = tf.trainable_variables()
+        grads = tf.gradients(self.loss, self.params)
 
         if max_grad_norm is not None:
             grads, grad_norm = tf.clip_by_global_norm(grads, max_grad_norm)
-        grads = list(zip(grads, params))
+        grads = list(zip(grads, self.params))
 
         # Setup the optimizer
         trainer = tf.train.RMSPropOptimizer(learning_rate=lr, decay=alpha, epsilon=epsilon)
@@ -69,11 +69,11 @@ class ActorCritic(object):
             tf.summary.scalar('Depth', self.mean_depth)
 
         # fix tf scopes if we are loading a scope that is different from the saved instance
-        name_scope = tf.contrib.framework.get_name_scope()
-        if len(name_scope) != 0:
-            params = { fix_tf_name(v.name, name_scope): v for v in params }
-        else:
-            params = { fix_tf_name(v.name): v for v in params }
+        #name_scope = tf.contrib.framework.get_name_scope()
+        #if len(name_scope) != 0:
+        #    params = { fix_tf_name(v.name, name_scope): v for v in params }
+        #else:
+        #    params = { fix_tf_name(v.name): v for v in params }
 
         # Initialize the tensorflow saver
         self.saver = tf.train.Saver(params, max_to_keep=1000000000)
@@ -148,7 +148,6 @@ def train(env_fn=None,
           load_count=0,
           summarize=True,
           load_path=None,
-          save_path=None,
           log_path=None,
           cpu_cores=1):
 
@@ -173,6 +172,7 @@ def train(env_fn=None,
     tf_config.gpu_options.allow_growth = True
 
     with tf.Session(config=tf_config) as sess:
+
         actor_critic = ActorCritic(sess, policy, ob_space, ac_space, nenvs, nsteps,
                                    pg_coeff, vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
@@ -206,6 +206,8 @@ def train(env_fn=None,
                
                 # Get the actions and values from the actor critic, we don't need neglogp
                 actions, values, neglogp = actor_critic.act(obs)
+                print(actions)
+                print(actions.shape)
                
                 mb_obs.append(np.copy(obs))
                 mb_actions.append(actions)
@@ -265,9 +267,9 @@ def train(env_fn=None,
                         mb_obs, mb_rewards, mb_masks, mb_actions, mb_values, mb_depth, i)
 
             if i % log_interval == 0:
-                actor_critic.save(save_path, i)
+                actor_critic.save(log_path, i)
             
-        actor_critic.save(save_path, 'final.ckpt')
+        actor_critic.save(log_path, 'final.ckpt')
         print('a2c model is finished training')
 
 

@@ -1,6 +1,4 @@
-# Inspired from OpenAI Baselines. This uses the same design of having an easily
-# substitutable generic policy that can be trained. This allows to easily
-# substitute in the I2A policy as opposed to the basic CNN one.
+
 import os
 import numpy as np
 import tensorflow as tf
@@ -22,7 +20,19 @@ def coord_conv(x):
 
 # A simple function to build a 3D convolutional layer
 def build_conv3d(x, instructions):
-    print('Warning: 3D Convolutional is not yet implemented')
+    
+    filters     = int(instruction[1])
+    kernel_size = int(instruction[2])
+    strides     = int(instruction[3])
+    tfactivity  = tf.nn.relu
+
+    x = tf.layers.conv3d(
+            activation=tfactivity,
+            inputs=x,
+            filters=filters,
+            kernel_size=kernel_size,
+            strides=strides,
+            padding='VALID')
     return x
 
 # A simple function to build a 2D convolutional layer
@@ -134,15 +144,17 @@ is correct.
         x = self.X
 
         # Construction of the model
-        with tf.variable_scope("model", reuse=reuse):
+        with tf.variable_scope("a2c_model", reuse=reuse):
 
-            for b in build['conv3d']:
-                x = build_conv3d(x, b)
-
-            for b in build['conv2d']:
-                x = build_conv2d(x, b)
-
-            h = build_dense(x, build['dense'][0])
+            with tf.variable_scope('conv_layers'):
+                for b in build['conv3d']:
+                    x = build_conv3d(x, b)
+            
+                for b in build['conv2d']:
+                    x = build_conv2d(x, b)
+            
+            with tf.variable_scope('hidden_layers'):
+                h = build_dense(x, build['dense'][0])
 
             with tf.variable_scope('pi'):
                 pi = build_dense_vfp(h, nact, build['pi'][0])
@@ -166,11 +178,9 @@ is correct.
 
     def step(self, ob, stochastic=True):
         if stochastic: 
-            a, v, neglogp = self.sess.run([self.a0, self.vf, self.neglogp0], {self.X:ob})
-            return a, v, neglogp
+            return self.sess.run([self.a0, self.vf, self.neglogp0], {self.X:ob})
         else:
-            a, v, neglogp = self.sess.run([self.nda, self.vf, self.neglogp0], {self.X:ob})
-            return a, v, neglogp
+            return self.sess.run([self.nda, self.vf, self.neglogp0], {self.X:ob})
 
     def value(self, ob):
         v = self.sess.run(self.vf, {self.X:ob})
