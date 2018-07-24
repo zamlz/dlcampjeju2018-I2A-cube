@@ -136,41 +136,108 @@ def main():
     # Verify that atleast one of the primary functions are chosen by the user
     assert sum([args.a2c, args.em, args.a2c_pd_test]) == 1, ""
 
-    if ':' not in args.scramble:
-        args.scramble = int(args.scramble)
-    if ':' not in args.maxsteps:
-        args.maxsteps = int(args.maxsteps)
+    # Store the default values of some arguments
+    env_id          = args.env
+    scramble        = args.scramble
+    maxsteps        = args.maxsteps
+    easy            = args.easy
+    adaptive        = args.adaptive
+    spectrum        = args.spectrum
+    orient_scramble = not args.no_orient_scramble
+    a2c_policy_def  = args.a2c_policy
+    em_arch_def     = args.em_arch
+
+    # Override defaults for A2C if user decides to load weights from filesystem
+    if (args.a2c or args.a2c_pd_test) and args.a2c_load and not args.no_override:
+       
+        a2c_load_list = args.a2c_load.split('/')
+        adaptive = False
+        easy = False
+        orient_scramble = False
+
+        for acpd in a2c_load_list:
+            if 'cube-x' in acpd:
+                env_id = acpd
+            if '_pi' in acpd:
+                a2c_policy_def = acpd
+            if 'adaptive' in acpd:
+                adaptive = True
+            if 'spectrum' in acpd:
+                spectrum = True
+            if 'os_yes' in acpd:
+                orient_scramble = True
+            if 'easy' in acpd:
+                easy = True
+
+    # If we are doing a2c pd testing, then we want to use the scramble and maxsteps
+    # passed via the command line and not the trained environment defaults
+    if args.a2c_pd_test:
+        adaptive = False
+        spectrum = False
+        easy = False
+        scramble = args.scramble
+        maxsteps = args.maxsteps
+
+    # Override defaults for Environment Model if user decides to load weights form FS
+    if args.em and args.em_load and not args.no_override:
+        
+        em_load_list = args.em_load.split('/')
+        adaptive = False
+        easy = False
+        orient_scramble = False
+
+        for empd in em_load_list:
+            if 'cube-x' in empd:
+                env_id = empd
+            if 'h:' in empd:
+                em_arch_def = empd
+            if 'adaptive' in empd:
+                adaptive = True
+            if 'spectrum' in empd:
+                spectrum = True
+            if 'os_yes' is empd:
+                orient_scramble = True
+            if 'easy' is acpd:
+                easy = True
+
+    # Decide if we wish to keep the scramble as a string
+    if ':' not in scramble:
+        scramble = int(scramble)
+    if ':' not in maxsteps:
+        maxsteps = int(maxsteps)
 
     # Create the logging path
     logpath = args.exp_root 
 
     if args.a2c:
         logpath += 'a2c/'
+    elif args.a2c_pd_test:
+        logpath += 'a2c_pd_test/'
     elif args.em:
         logpath += 'em/'
 
     if args.a2c:
-        logpath += args.a2c_policy + '/'
+        logpath += a2c_policy_def + '/'
     elif args.em:
-        logpath += args.em_arch + '/'
+        logpath += em_arch_def + '/'
     else:
         logpath += 'NULL/'
 
-    logpath += args.env + '/'
+    logpath += env_id + '/'
 
-    if args.adaptive:
+    if adaptive:
         logpath += 'adaptive/'
-    elif args.spectrum:
+    elif spectrum:
         logpath += 'spectrum/'
-    elif args.easy:
+    elif easy:
         logpath += 'easy/'
     else:
-        logpath += 's_' + str(args.scramble) + '_m_' + str(args.maxsteps) + '/'
+        logpath += 's_' + str(scramble) + '_m_' + str(maxsteps) + '/'
 
-    if args.no_orient_scramble:
-        logpath += 'os_no/'
-    else:
+    if orient_scramble:
         logpath += 'os_yes/'
+    else:
+        logpath += 'os_no/'
 
     logpath += 'iter_' + str(args.iters) + '/'
     logpath += 'lr_' + str(args.lr) + '/'
@@ -208,68 +275,10 @@ def main():
     import cube_gym
     import actor_critic as a2c
     import environment_model as em
-
-    # Store the default values of some arguments
-    scramble        = args.scramble
-    maxsteps        = args.maxsteps
-    easy            = args.easy
-    adaptive        = args.adaptive
-    spectrum        = args.spectrum
-    orient_scramble = not args.no_orient_scramble
-    a2c_policy_def = args.a2c_policy
-    em_arch_def = args.em_arch
-
-    # Override defaults for A2C if user decides to load weights from filesystem
-    if (args.a2c or args.a2c_pd_test) and args.a2c_load and not args.no_override:
-        
-        a2c_load_list = args.a2c_load.split('/')
-        adaptive = False
-        easy = False
-        orient_scramble = False
-
-        for acpd in a2c_load_list:
-            if '_pi' in acpd:
-                a2c_policy_def = acpd
-            if 'adaptive' in acpd:
-                adaptive = True
-            if 'spectrum' in acpd:
-                spectrum = True
-            if 'os_yes' in acpd:
-                orient_scramble = True
-            if 'easy' in acpd:
-                easy = True
-
-    # If we are doing a2c pd testing, then we want to use the scramble and maxsteps
-    # passed via the command line and not the trained environment defaults
-    if args.a2c_pd_test:
-        adaptive = False
-        spectrum = False
-        easy = False
-        scramble = args.scramble
-        maxsteps = args.maxsteps
-
-    # Override defaults for Environment Model if user decides to load weights form FS
-    if args.em and args.em_load and not args.no_override:
-        
-        em_load_list = args.em_load.split('/')
-        adaptive = False
-        easy = False
-        orient_scramble = False
-
-        for empd in em_load_list:
-            if 'adaptive' in empd:
-                adaptive = True
-            if 'spectrum' in empd:
-                spectrum = True
-            if 'os_yes' is empd:
-                orient_scramble = True
-            if 'easy' is acpd:
-                easy = True
-
     # A helper function that returns the correct environment as specified with our
     # settings chosen by the user
     def cube_env():
-        env = gym.make(args.env)
+        env = gym.make(env_id)
         env.unwrapped._refresh(scramble, maxsteps, easy, adaptive, orient_scramble)
         return env
 
