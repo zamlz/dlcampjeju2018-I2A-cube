@@ -40,7 +40,8 @@ class EMBuilder(NetworkBuilder):
                     x = tf.reshape(h, [-1, 1, 1, int(build['dense'][0][-1])])
                     for b in build['conv2dT'][:-1]:
                         x = build_conv2d(x, b)
-                    x = build_conv2d(x, build['conv2dT'][-1], tfactivity=tf.nn.sigmoid)
+                    if build['conv2dT'] != []:
+                        x = build_conv2d(x, build['conv2dT'][-1], tfactivity=tf.nn.sigmoid)
 
                 with tf.variable_scope('pred_observation'):
                     self.pred_obs = tf.reshape(x, [-1, nw, nh, nc])
