@@ -33,7 +33,7 @@ class EnvironmentModel(NetworkBase):
             self.rew_loss = tf.losses.softmax_cross_entropy(self.target_rew, self.model.pred_rew)
         else:
             self.obs_loss = tf.reduce_mean(tf.square(self.target_obs - self.model.pred_obs) / 2.0)
-            self.rew_loss = tf.reduce_sum(tf.square(self.target_rew - self.model.pred_rew) / 2.0)
+            self.rew_loss = tf.reduce_mean(tf.square(self.target_rew - self.model.pred_rew) / 2.0)
         self.loss = (obs_coeff*self.obs_loss) + (rew_coeff*self.rew_loss)
 
         # Find the model parameters
