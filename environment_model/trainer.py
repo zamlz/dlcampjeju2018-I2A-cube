@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 from environment_model.network import EMBuilder, em_parser
-from environment_model.util import RandomActorCritic
+from actor_critic import RandomActorCritic
 from common.multiprocessing_env import SubprocVecEnv
 from common.model import NetworkBase, model_play_games
 
@@ -26,7 +26,7 @@ class EnvironmentModel(NetworkBase):
 
         # Setup the Graph for the Environment Model
         em_arch = em_parser(em_arch)
-        self.model = EMBuilder(sess, em_arch, ob_space, ac_space, summarize=summarize)
+        self.model = EMBuilder(sess, em_arch, ob_space, ac_space)
          
         # Compute the losses (defaults to MSE)
         if loss_fn is 'ent':
@@ -164,7 +164,7 @@ def train(env_fn=None,
                 loss, obs_loss, rew_loss, _, smy = env_model.train(mb_s, mb_a, mb_ns, mb_r, summary_op)
                 writer.add_summary(smy, i)
             else:
-                loss, obs_loss, rew_loss, _ = env_model.train(mb_s, mb_a, mb_ns, mb_rm)
+                loss, obs_loss, rew_loss, _ = env_model.train(mb_s, mb_a, mb_ns, mb_r)
 
             if i % log_interval == 0:
                 env_model.save(log_path, i)

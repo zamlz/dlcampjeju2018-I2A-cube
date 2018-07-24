@@ -81,23 +81,33 @@ Usage
 -----
 
 ```
-usage: main.py [-h] [--a2c] [--em] [--a2c-pd-test] [--env ENV]
+usage: main.py [-h] [--a2c] [--a2c-pd-test] [--em] [--vae] [--iters ITERS]
+               [--env ENV] [--workers WORKERS] [--nsteps NSTEPS]
                [--scramble SCRAMBLE] [--maxsteps MAXSTEPS] [--adaptive]
                [--spectrum] [--easy] [--no-orient-scramble]
                [--a2c-policy A2C_POLICY] [--a2c-policy-help]
-               [--workers WORKERS] [--nsteps NSTEPS] [--iters ITERS]
                [--a2c-load A2C_LOAD] [--lr LR] [--pg-coeff PG_COEFF]
                [--vf-coeff VF_COEFF] [--ent-coeff ENT_COEFF]
+               [--em-arch EM_ARCH] [--em-arch-help] [--em-load EM_LOAD]
+               [--em-loss EM_LOSS] [--obs-coeff OBS_COEFF]
+               [--rew-coeff REW_COEFF] [--vae-arch VAE_ARCH] [--vae-arch-help]
+               [--vae-load VAE_LOAD] [--kl-coeff KL_COEFF]
                [--exp-root EXP_ROOT] [--exppath] [--tag TAG]
                [--log-interval LOG_INTERVAL] [--cpu CPU] [--no-override]
 
 optional arguments:
   -h, --help            show this help message and exit
   --a2c                 Train the Actor-Critic Agent (default: False)
-  --em                  Train the Environment Model (default: False)
   --a2c-pd-test         Test the Actor-Critic Params on a single env and show
                         policy logits (default: False)
+  --em                  Train the Environment Model (default: False)
+  --vae                 Train the Variational AutoEncoder Model (default:
+                        False)
+  --iters ITERS         Number of training iterations (default: 50000.0)
   --env ENV             Environment ID (default: cube-x2-v0)
+  --workers WORKERS     Set the number of workers (default: 16)
+  --nsteps NSTEPS       Number of environment steps per training iteration per
+                        worker (default: 40)
   --scramble SCRAMBLE   Set the max scramble size. format: size (or)
                         initial:target:episodes (default: 1)
   --maxsteps MAXSTEPS   Set the max step size. format: size (or)
@@ -114,12 +124,7 @@ optional arguments:
                         c2d+:16:3:1_h:4096:2048_pi_vf)
   --a2c-policy-help     Show the help dialouge to generate a policy string
                         (default: False)
-  --workers WORKERS     Set the number of workers (default: 16)
-  --nsteps NSTEPS       Number of environment steps per training iteration per
-                        worker (default: 40)
-  --iters ITERS         Number of training iterations (default: 50000.0)
-  --a2c-load A2C_LOAD   Load Path for the Actor-Critic Parameters (default:
-                        None)
+  --a2c-load A2C_LOAD   Load Path for the Actor-Critic Weights (default: None)
   --lr LR               Specify the learning rate to use (default: 0.0007)
   --pg-coeff PG_COEFF   Specify the Policy Gradient Loss Coefficient (default:
                         1.0)
@@ -127,6 +132,26 @@ optional arguments:
                         0.5)
   --ent-coeff ENT_COEFF
                         Specify the Entropy Coefficient (default: 0.05)
+  --em-arch EM_ARCH     Specify the environment model architecture (default:
+                        h:4096:4096:4096)
+  --em-arch-help        Show the help dialouge to generate a em arch string
+                        (default: False)
+  --em-load EM_LOAD     Load Path for the Environment-Model Weights (default:
+                        None)
+  --em-loss EM_LOSS     Specify the loss function for training the Env Model
+                        [mse,ent] (default: mse)
+  --obs-coeff OBS_COEFF
+                        Specify the Predicted Observation Loss Coefficient
+                        (default: 1.0)
+  --rew-coeff REW_COEFF
+                        Specify the Predicted Reward Loss Coefficient
+                        (default: 1.0)
+  --vae-arch VAE_ARCH   Specify the VAE model architecture (default: None)
+  --vae-arch-help       Show the help dialouge to generate a vae arch string
+                        (default: False)
+  --vae-load VAE_LOAD   Load Path for the Variational AutoEncoder Weights
+                        (default: None)
+  --kl-coeff KL_COEFF   Specify the KL-Divergence Coefficient (default: 0.5)
   --exp-root EXP_ROOT   Set the root path for all experiments (default:
                         ./experiments/)
   --exppath             Return the experiment folder under the specified
@@ -170,5 +195,4 @@ Just a script to unmount the Google Cloud FUSE mentioned earlier.
 [env-model]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/env_model.png
 [full-i2a]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/full_i2a.png
 [imagine-core]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/imagine.png
-
 

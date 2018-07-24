@@ -26,4 +26,3 @@ def cat_entropy(logits):
     z = tf.reduce_sum(e, 1, keepdims=True)
     p = e / z
     return tf.reduce_sum(p * (tf.log(z) - a), 1)
-

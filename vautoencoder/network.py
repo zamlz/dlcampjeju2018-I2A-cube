@@ -41,7 +41,7 @@ def sample_z(self, mu, logvar):
 
 class VAEBuilder(object):
     
-    def __init__(self, sess, var_arch, ob_space, ac_space, summarize=summarize):
+    def __init__(self, sess, var_arch, ob_space, ac_space):
 
         nw, nh, nc = ob_space
         nact = ac_space.n

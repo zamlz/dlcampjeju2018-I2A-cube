@@ -20,12 +20,14 @@ def main():
     parser.add_argument('--em',
             help='Train the Environment Model',
             action="store_true")
+    parser.add_argument('--vae',
+            help='Train the Variational AutoEncoder Model',
+            action="store_true")
 
     # General Arguments
     parser.add_argument('--iters',
             help='Number of training iterations',
             type=float, default=5e4)
-
 
     # Environment Arguments
     parser.add_argument('--env',
@@ -99,6 +101,20 @@ def main():
             help='Specify the Predicted Reward Loss Coefficient',
             type=float, default=1.0)
 
+    # Variational AutoEncoder Arguments
+    parser.add_argument('--vae-arch',
+            help='Specify the VAE model architecture',
+            type=str, default='NULL')
+    parser.add_argument('--vae-arch-help',
+            help='Show the help dialouge to generate a vae arch string',
+            action="store_true")
+    parser.add_argument('--vae-load',
+            help='Load Path for the Variational AutoEncoder Weights',
+            type=str, default=None)
+    parser.add_argument('--kl-coeff',
+            help='Specify the KL-Divergence Coefficient',
+            type=float, default=0.5)
+
     # Other misc arguments
     parser.add_argument('--exp-root',
             help='Set the root path for all experiments',
@@ -133,8 +149,13 @@ def main():
         print(EMBuilder.__doc__)
         exit(0)
 
+    if args.vae_arch_help:
+        from vautoencoder import VAEBuilder
+        print(VAEBuilder.__doc__)
+        exit(0)
+
     # Verify that atleast one of the primary functions are chosen by the user
-    assert sum([args.a2c, args.em, args.a2c_pd_test]) == 1, ""
+    assert sum([args.a2c, args.em, args.a2c_pd_test, args.vae]) == 1, ""
 
     # Store the default values of some arguments
     env_id          = args.env
@@ -146,6 +167,7 @@ def main():
     orient_scramble = not args.no_orient_scramble
     a2c_policy_def  = args.a2c_policy
     em_arch_def     = args.em_arch
+    vae_arch_def    = args.vae_arch
 
     # Override defaults for A2C if user decides to load weights from filesystem
     if (args.a2c or args.a2c_pd_test) and args.a2c_load and not args.no_override:
@@ -200,6 +222,28 @@ def main():
             if 'easy' is acpd:
                 easy = True
 
+    # Override defaults for VAE Model if user decides to load weights form FS
+    if args.vae and args.vae_load and not args.no_override:
+        
+        vae_load_list = args.vae_load.split('/')
+        adaptive = False
+        easy = False
+        orient_scramble = False
+
+        for vaepd in vae_load_list:
+            if 'cube-x' in vaepd:
+                env_id = vaepd
+            if 'h:' in vaepd:
+                vae_arch_def = vaepd
+            if 'adaptive' in vaepd:
+                adaptive = True
+            if 'spectrum' in vaepd:
+                spectrum = True
+            if 'os_yes' is vaepd:
+                orient_scramble = True
+            if 'easy' is acpd:
+                easy = True
+
     # Decide if we wish to keep the scramble as a string
     if ':' not in scramble:
         scramble = int(scramble)
@@ -215,11 +259,17 @@ def main():
         logpath += 'a2c_pd_test/'
     elif args.em:
         logpath += 'em/'
+    elif args.vae:
+        logpath += 'vae/'
+    else:
+        logpath += 'NULL/'
 
     if args.a2c:
         logpath += a2c_policy_def + '/'
     elif args.em:
         logpath += em_arch_def + '/'
+    elif args.vae:
+        logpath += vae_arch_def + '/'
     else:
         logpath += 'NULL/'
 
@@ -252,6 +302,9 @@ def main():
         logpath += 'obk_' + str(args.obs_coeff) + '/'
         logpath += 'rwk_' + str(args.rew_coeff) + '/'
 
+    if args.vae:
+        logpath += 'kl_' + str(args.obs_coeff) + '/'
+
     if args.tag == '':
         if args.exppath:
             print(logpath)
@@ -275,6 +328,8 @@ def main():
     import cube_gym
     import actor_critic as a2c
     import environment_model as em
+    import vautoencoder as vae
+
     # A helper function that returns the correct environment as specified with our
     # settings chosen by the user
     def cube_env():
@@ -328,11 +383,30 @@ def main():
                     loss            = args.em_loss,
                     log_interval    = args.log_interval,
                     summarize       = True,
-                    em_load_path    = args.a2c_load,
+                    em_load_path    = args.em_load,
                     a2c_load_path   = args.a2c_load,
                     log_path        = logpath, 
                     cpu_cores       = args.cpu)
     
+    # Variational AutoEncoder Model Related Stuff
+    #######################################################################################
+
+    if args.vae:
+        vae.train(  env_fn          = cube_env,
+                    spectrum        = spectrum,
+                    vae_arch        = vae_arch_def,
+                    a2c_policy      = a2c_policy_def,
+                    nenvs           = args.workers,
+                    nsteps          = args.nsteps,
+                    max_iters       = int(args.iters),
+                    kl_coeff        = args.kl_coeff,
+                    lr              = args.lr,
+                    log_interval    = args.log_interval,
+                    summarize       = True,
+                    vae_load_path   = args.vae_load,
+                    a2c_load_path   = args.a2c_load,
+                    log_path        = logpath,
+                    cpu_cores       = args.cpu)
 
 
 if __name__ == '__main__':

@@ -23,7 +23,7 @@ def concat_actions(x, a, n):
 
 class EMBuilder(object):
 
-    def __init__(self, sess, build, ob_space, ac_space, summarize=True):
+    def __init__(self, sess, build, ob_space, ac_space):
             
             self.sess = sess
 
