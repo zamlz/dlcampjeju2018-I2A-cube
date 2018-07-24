@@ -75,7 +75,7 @@ class EnvironmentModel(NetworkBase):
         return self.sess.run(ret_vals, feed_dict=feed_dict)
 
     # Given an observation and an action, return the predicted next observation and reward
-    def predict(obs, a):
+    def predict(self, obs, a):
         return self.model.predict(obs, a)
 
 
