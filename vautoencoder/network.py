@@ -25,15 +25,15 @@ class VAEBuilder(NetworkBuilder):
             with tf.variable_scope('encoder'):
                 for b in build['conv2d']:
                     x = build_conv2d(x, b)
+                x = tf.layers.flatten(x)
 
-            x = tf.layers.flatten(x)
             self.z_mu     = tf.layers.dense(x, units=int(build['en_z_de'][0][1]), name='z_mu')
             self.z_logvar = tf.layers.dense(x, units=int(build['en_z_de'][0][1]), name='z_logvar')
             self.z        = sample_z(self.z_mu, self.z_logvar)
-            x = tf.layers.dense(self.z, units=int(build['en_z_de'][0][2]), activation=None)
-            x = tf.reshape(x, [-1, 1, 1, int(build['en_z_de'][0][2]) ] )
             
             with tf.variable_scope('decoder'):
+                x = tf.layers.dense(self.z, units=int(build['en_z_de'][0][2]), activation=None)
+                x = tf.reshape(x, [-1, 1, 1, int(build['en_z_de'][0][2]) ] )
                 for b in build['conv2dT'][:-1]:
                     x = build_conv2d(x, b)
                 x = build_conv2d(x, build['conv2dT'][-1], tfactivity=tf.nn.sigmoid)

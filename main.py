@@ -81,7 +81,8 @@ def main():
     # Environment Model Arguments
     parser.add_argument('--em-arch',
             help='Specify the environment model architecture [Look at --arch-help]',
-            type=str, default='h:4096:4096:4096')
+            type=str,
+            default='c2d:32:3:1_c2d:64:3:1_c2d:128:3:1_h:4096:2048:1024_c2dT:128:4:1_c2dT:6:3:3')
     parser.add_argument('--em-load',
             help='Load Path for the Environment-Model Weights',
             type=str, default=None)

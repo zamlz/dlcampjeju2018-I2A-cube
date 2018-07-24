@@ -27,7 +27,7 @@ class EMBuilder(NetworkBuilder):
                 with tf.variable_scope('action_to_onehot_channel'):
                     x = concat_actions(x, self.a, self.nact)
 
-                with tf.variable_scope('conv_layers'):
+                with tf.variable_scope('encoder'):
                     for b in build['conv3d']:
                         x = build_conv3d(x, b)
                     for b in build['conv2d']:
@@ -36,9 +36,14 @@ class EMBuilder(NetworkBuilder):
                 with tf.variable_scope('hidden_layers'):
                     h = build_dense(x, build['dense'][0])
 
+                with tf.variable_scope('decoder'):
+                    x = tf.reshape(h, [-1, 1, 1, int(build['dense'][0][-1])])
+                    for b in build['conv2dT'][:-1]:
+                        x = build_conv2d(x, b)
+                    x = build_conv2d(x, build['conv2dT'][-1], tfactivity=tf.nn.sigmoid)
+
                 with tf.variable_scope('pred_observation'):
-                    pred_obs = tf.layers.dense(h, nw*nh*nc, activation=tf.nn.relu)
-                    self.pred_obs = tf.reshape(pred_obs, [-1, nw, nh, nc])
+                    self.pred_obs = tf.reshape(x, [-1, nw, nh, nc])
                
                 with tf.variable_scope('pred_reward'):
                     pred_rew = tf.layers.dense(h, 1, activation=tf.nn.relu)
