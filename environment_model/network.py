@@ -3,25 +3,10 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from actor_critic.policy import build_conv3d, build_conv2d, build_dense
+from common.network import NetworkBuilder
+from common.network import build_conv3d, build_conv2d, build_dense, concat_actions
 
-# Given some tensor x, concatenate the
-# one-hot expanded of a with depth n to
-# x and return it
-# x : [None, d1, d2, ..., dn, c]
-# a : [None]
-# xa: [None, d1, d2, ..., dn, c+n]
-def concat_actions(x, a, n):
- 
-    # Find other shapes to expand to
-    a = tf.one_hot(a, depth=n, axis=-1)
-    for s in x.shape.as_list()[1:-1][::-1]:
-        a = tf.stack([a for _ in range(s)], axis=1)
-    x = tf.concat([x,a], axis=-1)
-    return x
-
-
-class EMBuilder(object):
+class EMBuilder(NetworkBuilder):
 
     def __init__(self, sess, build, ob_space, ac_space):
             
@@ -29,6 +14,7 @@ class EMBuilder(object):
 
             nw, nh, nc = ob_space
             self.nact = ac_space.n
+            build = self.parser(build)
 
             self.obs = tf.placeholder(tf.float32, [None, nw, nh, nc], name='observations')
             self.a = tf.placeholder(tf.uint8, [None], name='actions')
@@ -61,25 +47,4 @@ class EMBuilder(object):
 
     def predict(self, ob, a):
         return self.sess.run([self.pred_obs, self.pred_rew], {self.obs:ob, self.a:a})
-
-
-def em_parser(builder):
-    builder = builder.split('_')
-    builder = [ b.split(":") for b in builder ]
-    bd = {
-        'conv3d' : [],
-        'conv2d' : [],
-        'dense': [],
-    }
-    for b in builder:
-        if 'c3d' in b[0]:
-            bd['conv3d'].append(b)
-        elif 'c2d' in b[0]:
-            bd['conv2d'].append(b)
-        elif 'h' in b[0]:
-            bd['dense'].append(b)
-        else:
-            pass
-    return bd
-
 

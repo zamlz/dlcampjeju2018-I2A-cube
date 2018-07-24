@@ -13,6 +13,7 @@ def model_play_games(model, envs, nsteps):
         yield s, a, r, true_ns, d
         s = ns
 
+# Base Class for various network archictures
 class NetworkBase(object):
 
     def __init__(self):

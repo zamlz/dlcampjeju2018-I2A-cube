@@ -1,7 +1,9 @@
 
 from actor_critic.trainer import train, ActorCritic
 from actor_critic.pd_test import pd_test
-from actor_critic.policy  import PolicyBuilder, policy_parser
+from actor_critic.policy  import PolicyBuilder
+
+import numpy as np
 
 # Behaves exactly like the actor critic agent,
 # but we can introduce more randomness in its output,

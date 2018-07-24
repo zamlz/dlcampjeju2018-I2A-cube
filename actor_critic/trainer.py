@@ -6,15 +6,14 @@ import numpy as np
 from tqdm import tqdm
 
 from actor_critic.util import discount_with_dones, cat_entropy, fix_tf_name
-from actor_critic.policy import PolicyBuilder as pibuild
-from actor_critic.policy import policy_parser
+from actor_critic.policy import PolicyBuilder
 from common.multiprocessing_env import SubprocVecEnv
 from common.model import NetworkBase
 
 
 class ActorCritic(NetworkBase):
 
-    def __init__(self, sess, policy, ob_space, ac_space, nenvs, nsteps,
+    def __init__(self, sess, pol_arch, ob_space, ac_space, nenvs, nsteps,
                  pg_coeff=1.0, vf_coeff=0.5, ent_coeff=0.01, max_grad_norm=0.5,
                  lr=7e-4, alpha=0.99, epsilon=1e-5, summarize=False):
 
@@ -29,9 +28,10 @@ class ActorCritic(NetworkBase):
         self.depth = tf.placeholder(tf.float32, [nbatch], name='scramble_depth')
       
         # setup the models
-        pb = policy_parser(policy)
-        self.step_model = pibuild(self.sess, ob_space, ac_space, nenvs, 1, reuse=False, build=pb)
-        self.train_model = pibuild(self.sess, ob_space, ac_space, nbatch, nsteps, reuse=True, build=pb)
+        self.step_model = PolicyBuilder(self.sess, ob_space, ac_space, nenvs, 1,
+                                        reuse=False, build=pol_arch)
+        self.train_model = PolicyBuilder(self.sess, ob_space, ac_space, nbatch, nsteps,
+                                         reuse=True, build=pol_arch)
 
         # Negative log probs of actions
         neglogpac = tf.nn.sparse_softmax_cross_entropy_with_logits(

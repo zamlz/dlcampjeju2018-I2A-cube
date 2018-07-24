@@ -60,11 +60,8 @@ def main():
 
     # Actor Critic Arguments
     parser.add_argument('--a2c-policy',
-            help='Specify the policy architecture',
+            help='Specify the policy architecture, [Look at --arch-help]',
             type=str, default='c2d+:16:3:1_h:4096:2048_pi_vf')
-    parser.add_argument('--a2c-policy-help',
-            help='Show the help dialouge to generate a policy string',
-            action="store_true")
     parser.add_argument('--a2c-load',
             help='Load Path for the Actor-Critic Weights',
             type=str, default=None)
@@ -83,11 +80,8 @@ def main():
 
     # Environment Model Arguments
     parser.add_argument('--em-arch',
-            help='Specify the environment model architecture',
+            help='Specify the environment model architecture [Look at --arch-help]',
             type=str, default='h:4096:4096:4096')
-    parser.add_argument('--em-arch-help',
-            help='Show the help dialouge to generate a em arch string',
-            action="store_true")
     parser.add_argument('--em-load',
             help='Load Path for the Environment-Model Weights',
             type=str, default=None)
@@ -103,11 +97,9 @@ def main():
 
     # Variational AutoEncoder Arguments
     parser.add_argument('--vae-arch',
-            help='Specify the VAE model architecture',
-            type=str, default='NULL')
-    parser.add_argument('--vae-arch-help',
-            help='Show the help dialouge to generate a vae arch string',
-            action="store_true")
+            help='Specify the VAE model architecture [Look at --arch-help]',
+            type=str,
+            default='c2d:32:4:2_c2d:64:4:2_z:32:1024_c2dT:128:5:2_c2dT:6:6:2')
     parser.add_argument('--vae-load',
             help='Load Path for the Variational AutoEncoder Weights',
             type=str, default=None)
@@ -134,24 +126,17 @@ def main():
     parser.add_argument('--no-override',
             help='Prevent loading arguments to override default settings',
             action="store_true")
+    parser.add_argument('--arch-help',
+            help="Show the help dialogue for constructing model architectures",
+            action="store_true")
 
     # Decode User Arguments
     #######################################################################################
     
     args = parser.parse_args()
-    if args.a2c_policy_help:
-        from actor_critic import PolicyBuilder
-        print(PolicyBuilder.__doc__)
-        exit(0)
-
-    if args.em_arch_help:
-        from environment_model import EMBuilder
-        print(EMBuilder.__doc__)
-        exit(0)
-
-    if args.vae_arch_help:
-        from vautoencoder import VAEBuilder
-        print(VAEBuilder.__doc__)
+    if args.arch_help:
+        from common.network import NetworkBuilder 
+        print(NetworkBuilder.__doc__)
         exit(0)
 
     # Verify that atleast one of the primary functions are chosen by the user

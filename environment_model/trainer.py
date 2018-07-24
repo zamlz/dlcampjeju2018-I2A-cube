@@ -5,7 +5,7 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
-from environment_model.network import EMBuilder, em_parser
+from environment_model.network import EMBuilder
 from actor_critic import RandomActorCritic
 from common.multiprocessing_env import SubprocVecEnv
 from common.model import NetworkBase, model_play_games
@@ -25,7 +25,6 @@ class EnvironmentModel(NetworkBase):
         self.target_rew = tf.placeholder(tf.float32, [None], name='target_rewards')
 
         # Setup the Graph for the Environment Model
-        em_arch = em_parser(em_arch)
         self.model = EMBuilder(sess, em_arch, ob_space, ac_space)
          
         # Compute the losses (defaults to MSE)
