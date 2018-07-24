@@ -32,7 +32,7 @@ def main():
     # Environment Arguments
     parser.add_argument('--env',
             help='Environment ID',
-            default='cube-x2-v0')
+            default='cube-x3-v0')
     parser.add_argument('--workers',
             help='Set the number of workers',
             type=int, default=16)
