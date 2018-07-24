@@ -70,8 +70,12 @@ is correct.
             'conv3dT': [],
         }
         for b in builder:
-            if 'c3d' in b[0]:
+            if 'c3dT' in b[0]:
+                bd['conv3dT'].append(b)
+            elif 'c3d' in b[0]:
                 bd['conv3d'].append(b)
+            elif 'c2dT' in b[0]:
+                bd['conv2dT'].append(b)
             elif 'c2d' in b[0]:
                 bd['conv2d'].append(b)
             elif 'h' in b[0]:
@@ -82,10 +86,6 @@ is correct.
                 bd['vf'].append(b)
             elif 'z' in b[0]:
                 bd['en_z_de'].append(b)
-            elif 'c2dT' in b[0]:
-                bd['conv2dT'].append(b)
-            elif 'c3dT' in b[0]:
-                bd['conv3dT'].append(b)
             else:
                 pass
         return bd
@@ -129,7 +129,7 @@ def build_conv3d(x, instruction):
 
 # A simple function to build a 2D convolutional layer
 # instructions will be off the form
-def build_conv2d(x, instruction):
+def build_conv2d(x, instruction, tfactivity=tf.nn.relu):
 
     conv_layer = tf.layers.conv2d
     if 'T' in instruction[0]:
@@ -141,7 +141,6 @@ def build_conv2d(x, instruction):
     filters     = int(instruction[1])
     kernel_size = int(instruction[2])
     strides     = int(instruction[3])
-    tfactivity  = tf.nn.relu
 
     x = conv_layer(
             activation=tfactivity,
@@ -194,6 +193,6 @@ def concat_actions(x, a, n):
     return x
 
 # Sample from the distribution
-def sample_z(self, mu, logvar):
-    eps = tf.random.normal(tf.shape(mu))
+def sample_z(mu, logvar):
+    eps = tf.random_normal(tf.shape(mu))
     return mu + tf.exp(logvar / 2) * eps

@@ -19,13 +19,14 @@ class VariationalAutoEncoder(NetworkBase):
         nw, nh, nc = ob_space
 
         # Setup targets
-        self.target_obs = tf.placeholder(tf.float32, [None, nw, nh, nc], name='target_obs')
+        self.target_obs = tf.placeholder(tf.float32, [None, nw, nh, nc], name='target_observations')
+        self.target_rew = tf.placeholder(tf.float32, [None], name='target_rewards')
 
         # Setup the network
         self.vae = VAEBuilder(sess, vae_arch, ob_space, ac_space)
 
         # Compute losses
-        logits_flat = tf.flatten(self.reconstructions)
+        logits_flat = tf.layers.flatten(self.vae.reconstructions)
         labels_flat = tf.layers.flatten(self.target_obs)
 
         self.reconstruction_loss = tf.reduce_sum(tf.square(logits_flat - labels_flat), axis=1)
@@ -45,8 +46,8 @@ class VariationalAutoEncoder(NetworkBase):
 
         if summarize:
             tf.summary.scalar('Loss', self.loss)
-            tf.summary.scalar('KL Loss', self.kl_loss)
-            tf.summary.scalar('Reconstruction Loss', self.reconstruction_loss)
+            tf.summary.scalar('KL Loss', tf.reduce_mean(self.kl_loss))
+            tf.summary.scalar('Reconstruction Loss', tf.reduce_mean(self.reconstruction_loss))
 
         self.saver = tf.train.Saver(self.params, max_to_keep=5)
 

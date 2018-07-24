@@ -99,7 +99,7 @@ def main():
     parser.add_argument('--vae-arch',
             help='Specify the VAE model architecture [Look at --arch-help]',
             type=str,
-            default='c2d:32:4:2_c2d:64:4:2_z:32:1024_c2dT:128:5:2_c2dT:6:6:2')
+            default='c2d:32:3:1_c2d:64:3:1_c2d:128:3:1_z:32:1024_c2dT:128:4:1_c2dT:6:3:3')
     parser.add_argument('--vae-load',
             help='Load Path for the Variational AutoEncoder Weights',
             type=str, default=None)
