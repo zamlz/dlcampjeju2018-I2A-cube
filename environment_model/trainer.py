@@ -1,5 +1,4 @@
 
-import os
 import gym
 import time
 import tensorflow as tf
@@ -7,11 +6,12 @@ import numpy as np
 from tqdm import tqdm
 
 from environment_model.network import EMBuilder, em_parser
-from environment_model.util import RandomActorCritic, play_games
+from environment_model.util import RandomActorCritic
 from common.multiprocessing_env import SubprocVecEnv
+from common.model import NetworkBase, model_play_games
 
 
-class EnvironmentModel(object):
+class EnvironmentModel(NetworkBase):
 
     def __init__(self, sess, em_arch, ob_space, ac_space, loss_fn='mse', lr=0.001,
                  obs_coeff=1.0, rew_coeff=1.0, summarize=False):
@@ -78,16 +78,6 @@ class EnvironmentModel(object):
     # Given an observation and an action, return the predicted next observation and reward
     def predict(obs, a):
         return self.model.predict(obs, a)
-
-    # Dump the model parameters in the specified path
-    def save(self, path, step):
-        if not os.path.exists(path):
-            os.makedirs(path)
-        self.saver.save(self.sess, path + str(step) + '.ckpt')
-
-    # Load a pretrained model
-    def load(self, full_path):
-        self.saver.restore(self.sess, full_path)
 
 
 def train(env_fn=None,
@@ -157,7 +147,7 @@ def train(env_fn=None,
 
             mb_s, mb_a, mb_r, mb_ns, mb_d = [], [], [], [], []
             
-            for s, a, r, ns, d in play_games(actor_critic, envs, nsteps):
+            for s, a, r, ns, d in model_play_games(actor_critic, envs, nsteps):
                 mb_s.append(s)
                 mb_a.append(a)
                 mb_r.append(r)

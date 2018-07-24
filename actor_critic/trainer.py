@@ -1,5 +1,4 @@
 
-import os
 import gym
 import time
 import tensorflow as tf
@@ -10,9 +9,10 @@ from actor_critic.util import discount_with_dones, cat_entropy, fix_tf_name
 from actor_critic.policy import PolicyBuilder as pibuild
 from actor_critic.policy import policy_parser
 from common.multiprocessing_env import SubprocVecEnv
+from common.model import NetworkBase
 
 
-class ActorCritic(object):
+class ActorCritic(NetworkBase):
 
     def __init__(self, sess, policy, ob_space, ac_space, nenvs, nsteps,
                  pg_coeff=1.0, vf_coeff=0.5, ent_coeff=0.01, max_grad_norm=0.5,
@@ -116,17 +116,6 @@ class ActorCritic(object):
     # Return the value of the value function
     def critique(self, obs):
         return self.step_model.value(obs)
-
-    # Dump the model parameters in the specified path
-    def save(self, path, step):
-        if not os.path.exists(path):
-            os.makedirs(path)
-        self.saver.save(self.sess, path + str(step) + '.ckpt')
-
-    # Load a pretrained model
-    def load(self, full_path):
-        self.saver.restore(self.sess, full_path)
-
 
 # The function that trains the a2c model
 

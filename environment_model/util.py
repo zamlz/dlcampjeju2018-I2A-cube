@@ -30,14 +30,3 @@ class RandomActorCritic(ActorCritic):
         else:
             return np.random.randint(self.nact, size=a.shape), v, n
 
-
-# A generator for stepping the agent with the environment
-def play_games(a2c, envs, nsteps):
-    s = envs.reset()
-    for i in range(nsteps):
-        a, _, _ = a2c.act(s)
-        ns, r, d, info = envs.step(a)
-        true_ns = [ x['obs'] for x in info ]
-        true_ns = np.stack(true_ns, axis=0)
-        yield s, a, r, true_ns, d
-        s = ns
