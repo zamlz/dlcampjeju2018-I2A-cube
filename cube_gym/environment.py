@@ -282,3 +282,32 @@ def onehotToRGB(obs, clean=False):
                 rgb[i, j] = [0, 0, 0]
 
     return rgb
+
+def onehotToRGBNoise(obs):
+    height, width, _ = obs.shape
+    rgb = np.zeros((height, width, 3), dtype=np.float32)
+
+    for i in range(height):
+        for j in range(width):
+           
+            # Red
+            rgb[i, j] += np.array([1, 0, 0]) * obs[i, j, 0]
+
+            # Orange (Purple)
+            rgb[i, j] += np.array([1, 0, 1]) * obs[i, j, 1]
+
+            # Yellow
+            rgb[i, j] += np.array([1, 1, 0]) * obs[i, j, 2]
+
+            # Green
+            rgb[i, j] += np.array([0, 1, 0]) * obs[i, j, 3]
+
+            # Blue
+            rgb[i, j] += np.array([0, 0, 1]) * obs[i, j, 4]
+
+            # White (Cyan)
+            rgb[i, j] += np.array([0, 1, 1]) * obs[i, j, 5]
+
+    return rgb
+
+   
