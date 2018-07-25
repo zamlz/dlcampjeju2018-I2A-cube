@@ -45,6 +45,9 @@ def main():
     parser.add_argument('--maxsteps',
             help='Set the max step size. format: size (or) initial:target:episodes',
             type=str, default='1')
+    parser.add_argument('--noise',
+            help='Set the noise for observations from the environment',
+            type=float, default=0.0)
     parser.add_argument('--adaptive',
             help='Turn on the adaptive curriculum',
             action="store_true")
@@ -147,6 +150,7 @@ def main():
     env_id          = args.env
     scramble        = args.scramble
     maxsteps        = args.maxsteps
+    noise           = args.noise
     easy            = args.easy
     adaptive        = args.adaptive
     spectrum        = args.spectrum
@@ -161,6 +165,7 @@ def main():
         a2c_load_list = args.a2c_load.split('/')
         adaptive = False
         easy = False
+        noise = 0.0
         orient_scramble = False
 
         for acpd in a2c_load_list:
@@ -168,6 +173,8 @@ def main():
                 env_id = acpd
             if '_pi' in acpd:
                 a2c_policy_def = acpd
+            if 'noise_' in acpd:
+                noise = float(acpd.split('_')[1])
             if 'adaptive' in acpd:
                 adaptive = True
             if 'spectrum' in acpd:
@@ -182,6 +189,7 @@ def main():
     if args.a2c_pd_test:
         adaptive = False
         spectrum = False
+        noise = 0.0
         easy = False
         scramble = args.scramble
         maxsteps = args.maxsteps
@@ -192,6 +200,7 @@ def main():
         em_load_list = args.em_load.split('/')
         adaptive = False
         easy = False
+        noise = 0.0
         orient_scramble = False
 
         for empd in em_load_list:
@@ -199,6 +208,8 @@ def main():
                 env_id = empd
             if 'h:' in empd:
                 em_arch_def = empd
+            if 'noise_' in acpd:
+                noise = float(acpd.split('_')[1])
             if 'adaptive' in empd:
                 adaptive = True
             if 'spectrum' in empd:
@@ -214,6 +225,7 @@ def main():
         vae_load_list = args.vae_load.split('/')
         adaptive = False
         easy = False
+        noise = 0.0
         orient_scramble = False
 
         for vaepd in vae_load_list:
@@ -221,6 +233,8 @@ def main():
                 env_id = vaepd
             if 'h:' in vaepd:
                 vae_arch_def = vaepd
+            if 'noise_' in acpd:
+                noise = float(acpd.split('_')[1])
             if 'adaptive' in vaepd:
                 adaptive = True
             if 'spectrum' in vaepd:
@@ -274,6 +288,7 @@ def main():
         logpath += 'os_yes/'
     else:
         logpath += 'os_no/'
+    logpath += 'noise_' + str(noise) + '/'
 
     logpath += 'iter_' + str(args.iters) + '/'
     logpath += 'lr_' + str(args.lr) + '/'
@@ -320,7 +335,7 @@ def main():
     # settings chosen by the user
     def cube_env():
         env = gym.make(env_id)
-        env.unwrapped._refresh(scramble, maxsteps, easy, adaptive, orient_scramble)
+        env.unwrapped._refresh(scramble, maxsteps, easy, adaptive, orient_scramble, noise)
         return env
 
     # Actor Critic Related Stuff
