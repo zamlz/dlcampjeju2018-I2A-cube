@@ -242,7 +242,10 @@ class CubeEnv(gym.Env):
                 state[i + 2*self.order][j + self.order] = cg.tileDictOneHot[self.cube.down[i][j]]
 
         # Add some noise to the observation
-        state += self.noise * (np.random.sample(size=state.shape) - 0.5)
+        n = self.nosie
+        # state += n * (np.random.sample(size=state.shape) - 0.5)
+        n = min(1.0, n)
+        state = np.multiply(state, np.ones(size=state.shape) - n*np.random.sample(size=state.shape))
     
         return state
 
