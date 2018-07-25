@@ -145,7 +145,7 @@ class CubeEnv(gym.Env):
     # match the center piece.
     def _naive_reward(self):
         c = self.cube.contiguousCount(normalize=True)
-        e = 6
+        e = 3
         return c**e, False
 
     # -----------------------------------------------------------------------
