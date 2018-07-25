@@ -121,7 +121,7 @@ def train(env_fn        = None,
     with tf.Session(config=tf_config) as sess:
 
         # Setup the Actor Critic 
-        actor_critic = RandomActorCritic(sess, a2c_arch, ob_space, ac_space, nenvs, nsteps)
+        actor_critic = RandomActorCritic(sess, a2c_arch, ob_space, ac_space)
 
         if a2c_load_path is not None:
             actor_critic.load(a2c_load_path)

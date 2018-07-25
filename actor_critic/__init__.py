@@ -26,9 +26,9 @@ class RandomActorCritic(ActorCritic):
         self.epsilon = 0.25 # This value is a hyperparameter
 
     def act(self, obs, stochastic=True):
-        a, v, n = self.step_model.step(obs, stochastic=stochastic)
+        # returns a, v, n
         if np.random.sample() > self.epsilon:
-            return a, v, n
+            return self.step_model.step(obs, stochastic=stochastic)
         else:
-            return np.random.randint(self.nact, size=a.shape), v, n
+            return np.random.randint(self.nact, size=obs.shape[0]), v, n
 

@@ -7,7 +7,7 @@ from common.network import build_conv3d, build_conv2d, build_dense, build_dense_
 
 class A2CBuilder(NetworkBuilder):
 
-    def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False, build=None):
+    def __init__(self, sess, build, ob_space, ac_space, reuse=False):
         
         self.sess = sess
 
@@ -18,8 +18,8 @@ class A2CBuilder(NetworkBuilder):
         assert len(build['pi']) == 1, "Missing Policy Function"
         assert len(build['vf']) == 1, "Missing Value Function"
 
-        self.X = tf.placeholder(tf.float32, [None, nw, nh, nc], name='observations') #obs
-        x = self.X
+        self.obs = tf.placeholder(tf.float32, [None, nw, nh, nc], name='observations') #obs
+        x = self.obs
 
         # Construction of the model
         with tf.variable_scope("a2c_model", reuse=reuse):
@@ -53,18 +53,18 @@ class A2CBuilder(NetworkBuilder):
         self.pi = pi
         self.vf = vf
 
-    def step(self, ob, stochastic=True):
+    def step(self, obs, stochastic=True):
         if stochastic: 
-            return self.sess.run([self.a0, self.vf, self.neglogp0], {self.X:ob})
+            return self.sess.run([self.a0, self.vf, self.neglogp0], {self.obs:obs})
         else:
-            return self.sess.run([self.nda, self.vf, self.neglogp0], {self.X:ob})
+            return self.sess.run([self.nda, self.vf, self.neglogp0], {self.obs:obs})
 
-    def value(self, ob):
-        v = self.sess.run(self.vf, {self.X:ob})
+    def value(self, obs):
+        v = self.sess.run(self.vf, {self.obs:obs})
         return v
 
-    def logits(self, ob):
-        pi = self.sess.run([self.pi], {self.X: ob})
+    def logits(self, obs):
+        pi = self.sess.run([self.pi], {self.obs: obs})
         return pi
 
     # Next two methods are required when we will have to generate the imaginations later in the I2A
@@ -73,4 +73,4 @@ class A2CBuilder(NetworkBuilder):
         return [X]
 
     def get_inputs(self):
-        return [self.X]
+        return [self.obs]

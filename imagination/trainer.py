@@ -4,53 +4,76 @@ import numpy as np
 import tensorflow as tf
 import time
 
-from actor_critic import RandomActorCritic
 from common.model import NetworkBase
 from common.multiprocessing_env import SubprocVec
-from environment_model import EnvironmentModel
 from imagination.core import ImaginationCore
 from imagination.policy import I2ABuilder 
 from tqdm import tqdm
 
-# TODO: Finish this class
+# Much of the code here is similar to the actor critic
+# training code. Thats because it is still trained
+# the same way, just we're using a different model
+# and with different hyperparameters
+# If I was smart, I would have modularized it
 class ImaginationAugmentedAgents(NetworkBase):
     
-    def __init__(self, sess, ob_space, ac_space,
-                 a2c_arch, a2c_load_path, a2c_random,
-                 em_arch, em_load_path):
+    def __init__(self, sess, i2a_arch, ob_space, ac_space, a2c_arch, a2c_load_path,
+                 em_arch, em_load_path, horizon,
+                 pg_coeff=1.0, vf_coeff=0.5, ent_coeff=0.01, max_grad_norm=0.5,
+                 lr=7e-4, alpha=0.99, epsilon=1e-5, summarize=False):
 
-        # Unlike the other models in the codebase, the imagination augmented agent
-        # needs to have an actor critic and environment model together to work.
-        # though the weights for the actor critic can be not loaded and it will
-        # become a random agent.
-        # -----------------------------------------------------------------------
+        self.sess = sess
+        self.nact = ac_space.n
+        self.ob_space = ob_space
 
-        # Setup the Actor Critic 
-        a2c = RandomActorCritic(sess, a2c_arch, ob_space, ac_space, nenvs, nsteps)
+        # Actions Advantages and Reward
+        self.actions = tf.placeholder(tf.int32, [None], name='actions')
+        self.advantages = tf.placeholder(tf.float32, [None], name='advantages')
+        self.rewards = tf.placeholder(tf.float32, [None], name='rewards')
+        self.depth = tf.placeholder(tf.float32, [None], name='scramble_depth')
 
-        if a2c_load_path is not None:
-            a2c.load(a2c_load_path)
-            with open(logpath+'/a2c_load_path'. 'w') as a2cfile:
-                a2cfile.write(a2c_load_path)
-            print('Loaded Actor Critic Weights')
-        else:
-            a2c.epsilon = -1
-            print('WARNING: No Actor Critic Model loaded. Using Random Agent')
-
-        # Setup the Environment Model
-        em = EnvironmentModel(sess, em_arch, ob_space, ac_space)
-
-        if em_load_path is not None:
-            em.load(em_load_path)
-            with open(logpath+'/em_load_path'. 'w') as emfile:
-                emfile.write(em_load_path)
-            print('Loaded Environment Model Weights')
-        else:
-            print('WARNING: No Environment Model loaded. Using empty rollouts')
-
-        # Now we build the imagination core, which generates batches of rollouts
+        # We build the imagination core, which generates batches of rollouts
         # using the actor critic model and the environment model
-        self.imag_core = ImaginationCore(a2c, em, rollouts)
+        self.core = ImaginationCore(sess, ob_space, ac_space, a2c_arch, a2c_load_path,
+                                    em_arch, em_load_path, horizon)
+        # And setup the model
+        self.step_model = I2ABuilder(sess, i2a_arch, ob_space, ac_space, reuse=False)
+        self.train_model = I2ABuilder(sess, i2a_arch, ob_space, ac_space, reuse=True)
+
+        # Policy Gradients Loss, Value Function Loss, Entropy, and Full Loss
+        self.pg_loss = tf.reduce_mean(self.advantages * neglogpac)
+        self.vf_loss = tf.reduce_mean(tf.square(tf.squeeze(self.train_model.vf) - self.rewards) / 2.0)
+        self.entropy = tf.reduce_mean(cat_entropy(self.train_model.pi))
+        self.loss = pg_coeff*self.pg_loss - ent_coeff*self.entropy + vf_coeff*self.vf_loss
+        
+        self.mean_rew= tf.reduce_mean(self.rewards)
+        self.mean_depth = tf.reduce_mean(self.depth)
+
+        # Find the model parameters and their gradients
+        with tf.variable_scope('i2a_model'):
+            self.params = tf.trainable_variables()
+        grads = tf.gradients(self.loss, self.params)
+
+        if max_grad_norm is not None:
+            grads, grad_norm = tf.clip_by_global_norm(grads, max_grad_norm)
+        grads = list(zip(grads, self.params))
+
+        # Setup the optimizer
+        trainer = tf.train.RMSPropOptimizer(learning_rate=lr, decay=alpha, epsilon=epsilon)
+        self.opt = trainer.apply_gradients(grads)
+
+        # For some awesome tensorboard stuff
+        if summarize:
+            tf.summary.scalar('Loss', self.loss)
+            tf.summary.scalar('Entropy', self.entropy)
+            tf.summary.scalar('Policy Gradient Loss', self.pg_loss)
+            tf.summary.scalar('Value Function Loss', self.vf_loss)
+            tf.summary.scalar('Rewards', self.mean_rew)
+            tf.summary.scalar('Depth', self.mean_depth)
+
+        # Initialize the tensorflow saver
+        self.saver = tf.train.Saver(self.params, max_to_keep=5)
+
 
 def train(env_fn        = None,
           spectrum      = False,
@@ -59,6 +82,7 @@ def train(env_fn        = None,
           em_arch       = None,
           nenvs         = 16,
           nsteps        = 100,
+          horizon       = 1,
           max_iters     = 1e6,
           gamma         = 0.99,
           pg_coeff      = 1.0,
@@ -98,7 +122,10 @@ def train(env_fn        = None,
 
     with tf.Session(config=tf_config) as sess:
         # TODO: Setup the Imagination Augmented Agent
-        i2a_agent = ImaginationAugmentedAgent()
+        i2a_agent = ImaginationAugmentedAgent(sess, i2a_arch, ob_space, ac_space,
+                                              a2c_arch, a2c_load_path,
+                                              em_arch, em_load_path,
+                                              horizon)
 
         load_count = 0
         if i2a_load_path is not None:

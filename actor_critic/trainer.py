@@ -13,25 +13,23 @@ from tqdm import tqdm
 
 class ActorCritic(NetworkBase):
 
-    def __init__(self, sess, a2c_arch, ob_space, ac_space, nenvs, nsteps,
+    def __init__(self, sess, a2c_arch, ob_space, ac_space, 
                  pg_coeff=1.0, vf_coeff=0.5, ent_coeff=0.01, max_grad_norm=0.5,
                  lr=7e-4, alpha=0.99, epsilon=1e-5, summarize=False):
 
         self.sess = sess
         self.nact = ac_space.n
-        nbatch = nenvs * nsteps
+        self.ob_space = ob_space
 
         # Actions, Advantages, and Reward
-        self.actions = tf.placeholder(tf.int32, [nbatch], name='actions')
-        self.advantages = tf.placeholder(tf.float32, [nbatch], name='advantages')
-        self.rewards = tf.placeholder(tf.float32, [nbatch], name='rewards')
-        self.depth = tf.placeholder(tf.float32, [nbatch], name='scramble_depth')
+        self.actions = tf.placeholder(tf.int32, [None], name='actions')
+        self.advantages = tf.placeholder(tf.float32, [None], name='advantages')
+        self.rewards = tf.placeholder(tf.float32, [None], name='rewards')
+        self.depth = tf.placeholder(tf.float32, [None], name='scramble_depth')
       
         # setup the models
-        self.step_model = A2CBuilder(self.sess, ob_space, ac_space, nenvs, 1,
-                                        reuse=False, build=a2c_arch)
-        self.train_model = A2CBuilder(self.sess, ob_space, ac_space, nbatch, nsteps,
-                                         reuse=True, build=a2c_arch)
+        self.step_model = A2CBuilder(self.sess, a2c_arch, ob_space, ac_space, reuse=False)
+        self.train_model = A2CBuilder(self.sess, a2c_arch, ob_space, ac_space, reuse=True)
 
         # Negative log probs of actions
         neglogpac = tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -161,7 +159,7 @@ def train(env_fn        = None,
 
     with tf.Session(config=tf_config) as sess:
 
-        actor_critic = ActorCritic(sess, a2c_arch, ob_space, ac_space, nenvs, nsteps,
+        actor_critic = ActorCritic(sess, a2c_arch, ob_space, ac_space,
                                    pg_coeff, vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
 
@@ -175,10 +173,9 @@ def train(env_fn        = None,
 
         sess.run(tf.global_variables_initializer())
 
-        batch_ob_shape = (nenvs*nsteps, nw, nh, nc)
+        batch_ob_shape = (-1, nw, nh, nc)
 
         dones = [False for _ in range(nenvs)]
-        nbatch = nenvs * nsteps
 
         episode_rewards = np.zeros((nenvs, ))
         final_rewards = np.zeros((nenvs, ))
