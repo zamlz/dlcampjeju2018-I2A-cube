@@ -51,7 +51,7 @@ class EnvironmentModel(NetworkBase):
             tf.summary.scalar('Observation Loss', self.obs_loss)
             tf.summary.scalar('Reward Loss', self.rew_loss)
 
-        self.saver = tf.train.Saver(self.params, max_to_keep=5)
+        self.saver = tf.train.Saver(self.params, max_to_keep=5000000)
 
     # Single training step
     def train(self, obs, actions, tar_obs, tar_rew, summary_op=None):
@@ -123,6 +123,8 @@ def train(env_fn=None,
 
         if a2c_load_path is not None:
             actor_critic.load(a2c_load_path)
+            with open(logpath+'/a2c_load_path', 'w') as outfile:
+                outfile.write(a2c_load_path)
             print('Loaded a2c')
         else:
             actor_critic.epsilon = -1
