@@ -415,6 +415,31 @@ class Cube:
                         return False
         return True
 
+    # Find the count of contiguous blocks
+    def contiguousCount(self, normalize=False):
+
+        if self.order % 2 == 0:
+            print('WARNING: This function works only on odd cubes')
+            return 0
+
+        count = 0
+        faces = [self.front, self.back, self.right, self.left, self.up, self.down]
+        ci, cj = (self.order // 2, self.order // 2) # center
+        for face in faces:
+            for i in range(self.order):
+                for j in range(self.order):
+                    if (i,j) == (ci, cj):
+                        pass
+                    if face[i][j] == face[ci][cj]:
+                        count += 1
+        if normalize:
+            count = count / ((self.order**2 - 1)*6)
+        return count
+                    
+                    
+                    
+        
+
     # Reset the cube to solved
     def restoreSolvedState(self):
         self.__init__(self.order)

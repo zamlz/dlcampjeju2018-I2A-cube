@@ -16,6 +16,13 @@ register(
     kwargs={'order': 3},
 )
 
+# 3x3x3 cube environment
+register(
+    id='cube-x3-v1',
+    entry_point='cube_gym.environment:CubeEnv',
+    kwargs={'order': 3, 'reward_type': 'naive'},
+)
+
 # 4x4x4 cube environment
 register(
     id='cube-x4-v0',

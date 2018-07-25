@@ -71,6 +71,7 @@ class CubeEnv(gym.Env):
         # Choose the specified reward function
         reward_funcs = {
             'sparse': self._sparse_reward,
+            'naive': self._naive_reward,
         }
         self.reward_function = reward_funcs[reward_type]
 
@@ -137,6 +138,12 @@ class CubeEnv(gym.Env):
             self.agent_solved = True
             return 1.0, True
         return 0.0, False
+
+    def _naive_reward(self):
+        c = self.cube.contiguousCount(normalize=True)
+        if int(c) == 1:
+            return c, True
+        return c, False
 
     # -----------------------------------------------------------------------
 
