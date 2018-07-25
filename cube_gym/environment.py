@@ -35,10 +35,11 @@ class CubeEnv(gym.Env):
                           before the environment resets
     """
 
-    def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3):
+    def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3, noise=0.0):
         
         self.order = order
         self.agent_solved = False
+        self.noise = noise
 
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
         # as functions of the other moves) and 6 orientation moves.
@@ -92,11 +93,12 @@ class CubeEnv(gym.Env):
     # Adaptive is another type of curriculum, it update the scramble size if
     # you solve the cube correctly and decreases it if you can't.
     def _refresh(self, scramble_depth='1:4:10', max_steps='10:20:10',
-            scramble_easy=False, adaptive=False, orient_scramble=False):
+            scramble_easy=False, adaptive=False, orient_scramble=False, noise=0.0):
 
         self.scramble_easy = scramble_easy
         self.adaptive_curriculum = adaptive
         self.orient_scramble = orient_scramble
+        self.noise = noise
        
         # This is updated here because if we decide to orient scramble our action
         # space changes. THEREFORE, you should never change the orient scramble
@@ -239,6 +241,9 @@ class CubeEnv(gym.Env):
             for j in range(self.order):
                 state[i + 2*self.order][j + self.order] = cg.tileDictOneHot[self.cube.down[i][j]]
 
+        # Add some noise to the observation
+        state += self.noise * (np.random.sample(size=state.shape) - 0.5)
+    
         return state
 
 
