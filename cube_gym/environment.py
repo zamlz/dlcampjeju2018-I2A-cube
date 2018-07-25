@@ -142,8 +142,9 @@ class CubeEnv(gym.Env):
     def _naive_reward(self):
         c = self.cube.contiguousCount(normalize=True)
         if int(c) == 1:
-            return c, True
-        return c, False
+            self.agent_solved = True
+            return 1.0, True
+        return c - 1.0, False
 
     # -----------------------------------------------------------------------
 
