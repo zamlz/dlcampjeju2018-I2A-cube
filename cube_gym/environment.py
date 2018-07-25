@@ -245,7 +245,7 @@ class CubeEnv(gym.Env):
         n = self.noise
         # state += n * (np.random.sample(size=state.shape) - 0.5)
         n = min(1.0, n)
-        state = np.multiply(state, np.ones(size=state.shape) - n*np.random.sample(size=state.shape))
+        state = np.multiply(state, np.ones(shape=state.shape) - n*np.random.sample(size=state.shape))
     
         return state
 
