@@ -139,12 +139,12 @@ class CubeEnv(gym.Env):
             return 1.0, True
         return 0.0, False
 
+    # Generates a reward based on how many like colored tiles are next to
+    # match the center piece.
     def _naive_reward(self):
         c = self.cube.contiguousCount(normalize=True)
-        if int(c) == 1:
-            self.agent_solved = True
-            return 1.0, True
-        return c - 1.0, False
+        e = 6
+        return c**e, False
 
     # -----------------------------------------------------------------------
 
