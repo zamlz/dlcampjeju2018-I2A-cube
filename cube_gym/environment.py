@@ -35,11 +35,13 @@ class CubeEnv(gym.Env):
                           before the environment resets
     """
 
-    def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3, noise=0.0):
+    def __init__(self, order, reward_type='sparse', scramble_depth=1, max_steps=3, noise=0.0,
+                 unbound=False):
         
         self.order = order
         self.agent_solved = False
         self.noise = noise
+        self.unbound = unbound
 
         # Actions spaces 3 and under, only have 12 face moves (middle turns can be thought of
         # as functions of the other moves) and 6 orientation moves.
@@ -169,6 +171,9 @@ class CubeEnv(gym.Env):
         # then these parameters lines below don't do anyting
         self.scramble_depth += self.scramble_update
         self.max_steps += self.max_steps_update
+
+        if self.unbound:
+            self.max_steps = 50
         
         # This is some really really easy testing code
         if self.scramble_easy:

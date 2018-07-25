@@ -20,7 +20,7 @@ register(
 register(
     id='cube-x3-v1',
     entry_point='cube_gym.environment:CubeEnv',
-    kwargs={'order': 3, 'reward_type': 'naive'},
+    kwargs={'order': 3, 'reward_type': 'naive', 'unbound': True},
 )
 
 # 4x4x4 cube environment
