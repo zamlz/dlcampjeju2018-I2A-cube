@@ -1,6 +1,6 @@
 
 from gym.envs.registration import register
-from cube_gym.environment import onehotToRGB
+from cube_gym.environment import onehotToRGB, onehotToRGBNoise
 
 # 2x2x2 cube environment
 register(
