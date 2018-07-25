@@ -74,21 +74,21 @@ class VariationalAutoEncoder(NetworkBase):
         return self.sess.run(ret_vals, feed_dict=feed_dict)
 
 
-def train(env_fn=None,
-          spectrum=False,
-          vae_arch=None,
-          a2c_policy=None,
-          nenvs=16,
-          nsteps=100,
-          max_iters=1e6,
-          kl_coeff=0.5,
-          lr = 7e-4,
-          log_interval=100,
-          summarize=True,
-          vae_load_path=None,
-          a2c_load_path=None,
-          log_path=None,
-          cpu_cores=1):
+def train(env_fn        = None,
+          spectrum      = False,
+          vae_arch      = None,
+          a2c_arch      = None,
+          nenvs         = 16,
+          nsteps        = 100,
+          max_iters     = 1e6,
+          kl_coeff      = 0.5,
+          lr            = 7e-4,
+          log_interval  = 100,
+          summarize     = True,
+          vae_load_path = None,
+          a2c_load_path = None,
+          log_path      = None,
+          cpu_cores     = 1):
 
     # Construct the vectorized parallel environments
     envs = [ env_fn for _ in range(nenvs) ]
@@ -112,7 +112,7 @@ def train(env_fn=None,
 
     with tf.Session(config=tf_config) as sess:
 
-        actor_critic = RandomActorCritic(sess, a2c_policy, ob_space, ac_space, nenvs, nsteps)
+        actor_critic = RandomActorCritic(sess, a2c_arch, ob_space, ac_space, nenvs, nsteps)
 
         if a2c_load_path is not None:
             actor_critic.load(a2c_load_path)

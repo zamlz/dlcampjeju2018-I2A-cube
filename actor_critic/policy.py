@@ -5,7 +5,7 @@ import tensorflow as tf
 from common.network import NetworkBuilder
 from common.network import build_conv3d, build_conv2d, build_dense, build_dense_vfp
 
-class PolicyBuilder(NetworkBuilder):
+class A2CBuilder(NetworkBuilder):
 
     def __init__(self, sess, ob_space, ac_space, nbatch, nsteps, reuse=False, build=None):
         

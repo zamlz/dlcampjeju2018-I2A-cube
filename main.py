@@ -23,6 +23,9 @@ def main():
     parser.add_argument('--vae',
             help='Train the Variational AutoEncoder Model',
             action="store_true")
+    parser.add_argument('--i2a',
+            help='Train the Imagination Augmented Agent',
+            action="store_true")
 
     # General Arguments
     parser.add_argument('--iters',
@@ -62,7 +65,7 @@ def main():
             action="store_true")
 
     # Actor Critic Arguments
-    parser.add_argument('--a2c-policy',
+    parser.add_argument('--a2c-arch',
             help='Specify the policy architecture, [Look at --arch-help]',
             type=str, default='c2d+:16:3:1_h:4096:2048_pi_vf')
     parser.add_argument('--a2c-load',
@@ -111,6 +114,14 @@ def main():
             help='Specify the KL-Divergence Coefficient',
             type=float, default=0.5)
 
+    # Imagination Augmented Agent Arguments
+    parser.add_argument('--i2a-arch',
+            help='Specify the I2A policy architecture [Look at --arch-help]',
+            type=str, default='NULL')
+    parser.add_argument('--i2a-load',
+            help='Load Path for the Imagination-Augmented Agents Weights',
+            type=str, default=None)
+
     # Other misc arguments
     parser.add_argument('--exp-root',
             help='Set the root path for all experiments',
@@ -144,7 +155,7 @@ def main():
         exit(0)
 
     # Verify that atleast one of the primary functions are chosen by the user
-    assert sum([args.a2c, args.em, args.a2c_pd_test, args.vae]) == 1, ""
+    assert sum([args.a2c, args.em, args.a2c_pd_test, args.vae, args.i2a]) == 1, ""
 
     # Store the default values of some arguments
     env_id          = args.env
@@ -155,9 +166,10 @@ def main():
     adaptive        = args.adaptive
     spectrum        = args.spectrum
     orient_scramble = not args.no_orient_scramble
-    a2c_policy_def  = args.a2c_policy
+    a2c_arch_def    = args.a2c_arch
     em_arch_def     = args.em_arch
     vae_arch_def    = args.vae_arch
+    i2a_arch_def    = args.i2a_arch
 
     # Override defaults for A2C if user decides to load weights from filesystem
     if (args.a2c or args.a2c_pd_test) and args.a2c_load and not args.no_override:
@@ -172,7 +184,7 @@ def main():
             if 'cube-x' in acpd:
                 env_id = acpd
             if '_pi' in acpd:
-                a2c_policy_def = acpd
+                a2c_arch_def = acpd
             if 'noise_' in acpd:
                 noise = float(acpd.split('_')[1])
             if 'adaptive' in acpd:
@@ -208,15 +220,15 @@ def main():
                 env_id = empd
             if 'h:' in empd:
                 em_arch_def = empd
-            if 'noise_' in acpd:
-                noise = float(acpd.split('_')[1])
+            if 'noise_' in empd:
+                noise = float(empd.split('_')[1])
             if 'adaptive' in empd:
                 adaptive = True
             if 'spectrum' in empd:
                 spectrum = True
             if 'os_yes' is empd:
                 orient_scramble = True
-            if 'easy' is acpd:
+            if 'easy' is empd:
                 easy = True
 
     # Override defaults for VAE Model if user decides to load weights form FS
@@ -233,16 +245,41 @@ def main():
                 env_id = vaepd
             if 'h:' in vaepd:
                 vae_arch_def = vaepd
-            if 'noise_' in acpd:
-                noise = float(acpd.split('_')[1])
+            if 'noise_' in vaepd:
+                noise = float(vaepd.split('_')[1])
             if 'adaptive' in vaepd:
                 adaptive = True
             if 'spectrum' in vaepd:
                 spectrum = True
             if 'os_yes' is vaepd:
                 orient_scramble = True
-            if 'easy' is acpd:
+            if 'easy' is vaepd:
                 easy = True
+
+    if args.i2a and args.i2a_load and not args.no_override:
+        
+        i2a_load_list = args.i2a_load.split('/')
+        adaptive = False
+        easy = False
+        noise = 0.0
+        orient_scramble = False
+
+        for i2apd in i2a_load_list:
+            if 'cube-x' in i2apd:
+                env_id = i2apd
+            if 'h:' in i2apd:
+                i2a_arch_def = i2apd
+            if 'noise_' in i2apd:
+                noise = float(i2apd.split('_')[1])
+            if 'adaptive' in i2apd:
+                adaptive = True
+            if 'spectrum' in i2apd:
+                spectrum = True
+            if 'os_yes' is i2apd:
+                orient_scramble = True
+            if 'easy' is i2apd:
+                easy = True
+            
 
     # Decide if we wish to keep the scramble as a string
     if ':' not in scramble:
@@ -261,15 +298,19 @@ def main():
         logpath += 'em/'
     elif args.vae:
         logpath += 'vae/'
+    elif args.i2a:
+        logpath += 'i2a/'
     else:
         logpath += 'NULL/'
 
     if args.a2c:
-        logpath += a2c_policy_def + '/'
+        logpath += a2c_arch_def + '/'
     elif args.em:
         logpath += em_arch_def + '/'
     elif args.vae:
         logpath += vae_arch_def + '/'
+    elif args.i2a:
+        logpath += i2a_arch_def + '/'
     else:
         logpath += 'NULL/'
 
@@ -288,6 +329,7 @@ def main():
         logpath += 'os_yes/'
     else:
         logpath += 'os_no/'
+
     logpath += 'noise_' + str(noise) + '/'
 
     logpath += 'iter_' + str(args.iters) + '/'
@@ -305,6 +347,9 @@ def main():
 
     if args.vae:
         logpath += 'kl_' + str(args.obs_coeff) + '/'
+
+    if args.i2a:
+        pass
 
     if args.tag == '':
         if args.exppath:
@@ -330,6 +375,7 @@ def main():
     import actor_critic as a2c
     import environment_model as em
     import vautoencoder as vae
+    import imagination as i2a
 
     # A helper function that returns the correct environment as specified with our
     # settings chosen by the user
@@ -344,7 +390,7 @@ def main():
     if args.a2c:
         a2c.train(  env_fn          = cube_env,
                     spectrum        = spectrum,
-                    policy          = a2c_policy_def,
+                    a2c_arch        = a2c_arch_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
                     max_iters       = int(args.iters),
@@ -364,7 +410,7 @@ def main():
     
     if args.a2c_pd_test:
         a2c.pd_test(env_fn          = cube_env,
-                    policy          = a2c_policy_def,
+                    policy          = a2c_arch_def,
                     load_path       = args.a2c_load)
 
     # Environment Model Related Stuff
@@ -374,7 +420,7 @@ def main():
         em.train(   env_fn          = cube_env,
                     spectrum        = spectrum,
                     em_arch         = em_arch_def,
-                    a2c_policy      = a2c_policy_def,
+                    a2c_arch        = a2c_arch_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
                     max_iters       = int(args.iters),
@@ -396,7 +442,7 @@ def main():
         vae.train(  env_fn          = cube_env,
                     spectrum        = spectrum,
                     vae_arch        = vae_arch_def,
-                    a2c_policy      = a2c_policy_def,
+                    a2c_arch        = a2c_arch_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
                     max_iters       = int(args.iters),
@@ -409,6 +455,33 @@ def main():
                     log_path        = logpath,
                     cpu_cores       = args.cpu)
 
+    # Imagination-Augmented Agent Related Stuff
+    #######################################################################################
+
+    if args.i2a:
+        i2a.train(  env_fn          = cube_env,
+                    spectrum        = spectrum,
+                    i2a_arch        = i2a_arch_def,
+                    a2c_arch        = a2c_arch_def,
+                    em_arch         = em_arch_def,
+                    nenvs           = args.workers,
+                    nsteps          = args.nsteps,
+                    max_iters       = int(args.iters)
+                    gamma           = 0.99,
+                    pg_coeff        = args.pg_coeff,
+                    vf_coeff        = args.vf_coeff,
+                    ent_coeff       = args.ent_coeff,
+                    max_grad_norm   = 0.5,
+                    lr              = args.lr,
+                    alpha           = 0.99,
+                    epsilon         = 1e-5,
+                    log_interval    = args.log_interval,
+                    summarize       = True,
+                    i2a_load_path   = args.i2a_load,
+                    a2c_load_path   = args.a2c_load,
+                    em_load_path    = args.em_load,
+                    log_path        = logpath,
+                    cpu_cores       = args.cpu)
 
 if __name__ == '__main__':
     main()

@@ -1,14 +1,14 @@
 
 import gym
-import time
-import tensorflow as tf
 import numpy as np
-from tqdm import tqdm
+import tensorflow as tf
+import time
 
-from environment_model.network import EMBuilder
 from actor_critic import RandomActorCritic
 from common.multiprocessing_env import SubprocVecEnv
 from common.model import NetworkBase, model_play_games
+from environment_model.network import EMBuilder
+from tqdm import tqdm
 
 
 class EnvironmentModel(NetworkBase):
@@ -80,23 +80,23 @@ class EnvironmentModel(NetworkBase):
         return self.model.predict(obs, a)
 
 
-def train(env_fn=None,
-          spectrum = False,
-          em_arch=None,
-          a2c_policy=None,
-          nenvs = 16,
-          nsteps = 100,
-          max_iters = 1e6,
-          obs_coeff = 0.5,
-          rew_coeff = 0.5,
-          lr = 7e-4,
-          loss='mse',
-          log_interval = 100,
-          summarize=True,
-          em_load_path=None,
-          a2c_load_path=None,
-          log_path=None,
-          cpu_cores=1):
+def train(env_fn        = None,
+          spectrum      = False,
+          em_arch       = None,
+          a2c_arch      = None,
+          nenvs         = 16,
+          nsteps        = 100,
+          max_iters     = 1e6,
+          obs_coeff     = 0.5,
+          rew_coeff     = 0.5,
+          lr            = 7e-4,
+          loss          = 'mse',
+          log_interval  = 100,
+          summarize     = True,
+          em_load_path  = None,
+          a2c_load_path = None,
+          log_path      = None,
+          cpu_cores     = 1):
 
     # Construct the vectorized parallel environments
     envs = [ env_fn for _ in range(nenvs) ]
@@ -120,17 +120,19 @@ def train(env_fn=None,
 
     with tf.Session(config=tf_config) as sess:
 
-        actor_critic = RandomActorCritic(sess, a2c_policy, ob_space, ac_space, nenvs, nsteps)
+        # Setup the Actor Critic 
+        actor_critic = RandomActorCritic(sess, a2c_arch, ob_space, ac_space, nenvs, nsteps)
 
         if a2c_load_path is not None:
             actor_critic.load(a2c_load_path)
             with open(logpath+'/a2c_load_path', 'w') as outfile:
                 outfile.write(a2c_load_path)
-            print('Loaded a2c')
+            print('Loaded Actor Critic Weights')
         else:
             actor_critic.epsilon = -1
             print('WARNING: No Actor Critic Model loaded. Using Random Agent')
 
+        # Setup the Environment Model
         env_model = EnvironmentModel(sess, em_arch, ob_space, ac_space, loss,
                                      lr, obs_coeff, rew_coeff, summarize)
 
@@ -144,7 +146,7 @@ def train(env_fn=None,
         sess.run(tf.global_variables_initializer())
 
         print('Env Model Training Start!')
-        print('Model will saved on intervals of %i' % (log_interval))
+        print('Model will be saved on intervals of %i' % (log_interval))
         for i in tqdm(range(load_count + 1, int(max_iters)+1), ascii=True, desc='EnvironmentModel'):
 
             mb_s, mb_a, mb_r, mb_ns, mb_d = [], [], [], [], []

@@ -1,19 +1,19 @@
 
 import gym
-import time
-import tensorflow as tf
 import numpy as np
-from tqdm import tqdm
+import tensorflow as tf
+import time
 
+from actor_critic.policy import A2CBuilder 
 from actor_critic.util import discount_with_dones, cat_entropy, fix_tf_name
-from actor_critic.policy import PolicyBuilder
-from common.multiprocessing_env import SubprocVecEnv
 from common.model import NetworkBase
+from common.multiprocessing_env import SubprocVecEnv
+from tqdm import tqdm
 
 
 class ActorCritic(NetworkBase):
 
-    def __init__(self, sess, pol_arch, ob_space, ac_space, nenvs, nsteps,
+    def __init__(self, sess, a2c_arch, ob_space, ac_space, nenvs, nsteps,
                  pg_coeff=1.0, vf_coeff=0.5, ent_coeff=0.01, max_grad_norm=0.5,
                  lr=7e-4, alpha=0.99, epsilon=1e-5, summarize=False):
 
@@ -28,10 +28,10 @@ class ActorCritic(NetworkBase):
         self.depth = tf.placeholder(tf.float32, [nbatch], name='scramble_depth')
       
         # setup the models
-        self.step_model = PolicyBuilder(self.sess, ob_space, ac_space, nenvs, 1,
-                                        reuse=False, build=pol_arch)
-        self.train_model = PolicyBuilder(self.sess, ob_space, ac_space, nbatch, nsteps,
-                                         reuse=True, build=pol_arch)
+        self.step_model = A2CBuilder(self.sess, ob_space, ac_space, nenvs, 1,
+                                        reuse=False, build=a2c_arch)
+        self.train_model = A2CBuilder(self.sess, ob_space, ac_space, nbatch, nsteps,
+                                         reuse=True, build=a2c_arch)
 
         # Negative log probs of actions
         neglogpac = tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -119,25 +119,25 @@ class ActorCritic(NetworkBase):
 
 # The function that trains the a2c model
 
-def train(env_fn=None,
-          spectrum=False,
-          policy=None,
-          nenvs=16,
-          nsteps=100,
-          max_iters=1e6,
-          gamma=0.99,
-          pg_coeff = 1.0,
-          vf_coeff = 0.5,
-          ent_coeff = 0.01,
+def train(env_fn        = None,
+          spectrum      = False,
+          a2c_arch      = None,
+          nenvs         = 16,
+          nsteps        = 100,
+          max_iters     = 1e6,
+          gamma         = 0.99,
+          pg_coeff      = 1.0,
+          vf_coeff      = 0.5,
+          ent_coeff     = 0.01,
           max_grad_norm = 0.5,
-          lr = 7e-4,
-          alpha = 0.99,
-          epsilon = 1e-5,
-          log_interval=100,
-          summarize=True,
-          load_path=None,
-          log_path=None,
-          cpu_cores=1):
+          lr            = 7e-4,
+          alpha         = 0.99,
+          epsilon       = 1e-5,
+          log_interval  = 100,
+          summarize     = True,
+          load_path     = None,
+          log_path      = None,
+          cpu_cores     = 1):
 
     # Construct the vectorized parallel environments
     envs = [ env_fn for _ in range(nenvs) ]
@@ -161,7 +161,7 @@ def train(env_fn=None,
 
     with tf.Session(config=tf_config) as sess:
 
-        actor_critic = ActorCritic(sess, policy, ob_space, ac_space, nenvs, nsteps,
+        actor_critic = ActorCritic(sess, a2c_arch, ob_space, ac_space, nenvs, nsteps,
                                    pg_coeff, vf_coeff, ent_coeff, max_grad_norm,
                                    lr, alpha, epsilon, summarize)
 
