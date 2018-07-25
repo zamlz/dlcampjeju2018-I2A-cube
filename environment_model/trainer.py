@@ -13,7 +13,7 @@ from common.model import NetworkBase, model_play_games
 
 class EnvironmentModel(NetworkBase):
 
-    def __init__(self, sess, em_arch, ob_space, ac_space, loss_fn='mse', lr=0.001,
+    def __init__(self, sess, em_arch, ob_space, ac_space, loss_fn='mse', lr=7e-4,
                  obs_coeff=1.0, rew_coeff=1.0, summarize=False):
         
         self.sess = sess
@@ -43,7 +43,8 @@ class EnvironmentModel(NetworkBase):
         grads = list(zip(grads, self.params))
 
         # Setup the optimizer
-        trainer = tf.train.AdamOptimizer(learning_rate=lr)
+        # trainer = tf.train.AdamOptimizer(learning_rate=lr)
+        trainer = tf.train.RMSPropOptimizer(learning_rate=lr, decay=0.99, epsilon=1e-5)
         self.opt = trainer.apply_gradients(grads)
 
         if summarize:
