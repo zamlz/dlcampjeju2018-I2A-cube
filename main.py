@@ -466,7 +466,7 @@ def main():
                     em_arch         = em_arch_def,
                     nenvs           = args.workers,
                     nsteps          = args.nsteps,
-                    max_iters       = int(args.iters)
+                    max_iters       = int(args.iters),
                     gamma           = 0.99,
                     pg_coeff        = args.pg_coeff,
                     vf_coeff        = args.vf_coeff,

@@ -77,23 +77,27 @@ While the environment supports any n-order cube, testing will only be done of th
 the policy can become when allowing the agent to control the orientation of the
 environment.
 
-Usage
------
+Results (Work in Progress)
+--------------------------
+
+Full Usage
+----------
 
 ```
-usage: main.py [-h] [--a2c] [--a2c-pd-test] [--em] [--vae] [--iters ITERS]
-               [--env ENV] [--workers WORKERS] [--nsteps NSTEPS]
-               [--scramble SCRAMBLE] [--maxsteps MAXSTEPS] [--adaptive]
-               [--spectrum] [--easy] [--no-orient-scramble]
-               [--a2c-policy A2C_POLICY] [--a2c-policy-help]
+usage: main.py [-h] [--a2c] [--a2c-pd-test] [--em] [--vae] [--i2a]
+               [--iters ITERS] [--env ENV] [--workers WORKERS]
+               [--nsteps NSTEPS] [--scramble SCRAMBLE] [--maxsteps MAXSTEPS]
+               [--noise NOISE] [--adaptive] [--spectrum] [--easy]
+               [--no-orient-scramble] [--a2c-arch A2C_ARCH]
                [--a2c-load A2C_LOAD] [--lr LR] [--pg-coeff PG_COEFF]
                [--vf-coeff VF_COEFF] [--ent-coeff ENT_COEFF]
-               [--em-arch EM_ARCH] [--em-arch-help] [--em-load EM_LOAD]
-               [--em-loss EM_LOSS] [--obs-coeff OBS_COEFF]
-               [--rew-coeff REW_COEFF] [--vae-arch VAE_ARCH] [--vae-arch-help]
-               [--vae-load VAE_LOAD] [--kl-coeff KL_COEFF]
-               [--exp-root EXP_ROOT] [--exppath] [--tag TAG]
-               [--log-interval LOG_INTERVAL] [--cpu CPU] [--no-override]
+               [--em-arch EM_ARCH] [--em-load EM_LOAD] [--em-loss EM_LOSS]
+               [--obs-coeff OBS_COEFF] [--rew-coeff REW_COEFF]
+               [--vae-arch VAE_ARCH] [--vae-load VAE_LOAD]
+               [--kl-coeff KL_COEFF] [--i2a-arch I2A_ARCH]
+               [--i2a-load I2A_LOAD] [--exp-root EXP_ROOT] [--exppath]
+               [--tag TAG] [--log-interval LOG_INTERVAL] [--cpu CPU]
+               [--no-override] [--arch-help]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -103,8 +107,9 @@ optional arguments:
   --em                  Train the Environment Model (default: False)
   --vae                 Train the Variational AutoEncoder Model (default:
                         False)
+  --i2a                 Train the Imagination Augmented Agent (default: False)
   --iters ITERS         Number of training iterations (default: 50000.0)
-  --env ENV             Environment ID (default: cube-x2-v0)
+  --env ENV             Environment ID (default: cube-x3-v0)
   --workers WORKERS     Set the number of workers (default: 16)
   --nsteps NSTEPS       Number of environment steps per training iteration per
                         worker (default: 40)
@@ -112,6 +117,8 @@ optional arguments:
                         initial:target:episodes (default: 1)
   --maxsteps MAXSTEPS   Set the max step size. format: size (or)
                         initial:target:episodes (default: 1)
+  --noise NOISE         Set the noise for observations from the environment
+                        (default: 0.0)
   --adaptive            Turn on the adaptive curriculum (default: False)
   --spectrum            Setup up a spectrum of environments with different
                         difficulties (default: False)
@@ -119,11 +126,8 @@ optional arguments:
                         change, only R scrabmle (default: False)
   --no-orient-scramble  Lets the environment scramble orientation as well
                         (default: False)
-  --a2c-policy A2C_POLICY
-                        Specify the policy architecture (default:
-                        c2d+:16:3:1_h:4096:2048_pi_vf)
-  --a2c-policy-help     Show the help dialouge to generate a policy string
-                        (default: False)
+  --a2c-arch A2C_ARCH   Specify the policy architecture, [Look at --arch-help]
+                        (default: c2d+:16:3:1_h:4096:2048_pi_vf)
   --a2c-load A2C_LOAD   Load Path for the Actor-Critic Weights (default: None)
   --lr LR               Specify the learning rate to use (default: 0.0007)
   --pg-coeff PG_COEFF   Specify the Policy Gradient Loss Coefficient (default:
@@ -132,10 +136,9 @@ optional arguments:
                         0.5)
   --ent-coeff ENT_COEFF
                         Specify the Entropy Coefficient (default: 0.05)
-  --em-arch EM_ARCH     Specify the environment model architecture (default:
-                        h:4096:4096:4096)
-  --em-arch-help        Show the help dialouge to generate a em arch string
-                        (default: False)
+  --em-arch EM_ARCH     Specify the environment model architecture [Look at
+                        --arch-help] (default: c2d:32:3:1_c2d:64:3:1_c2d:128:3
+                        :1_h:4096:2048:1024_c2dT:128:4:1_c2dT:6:3:3)
   --em-load EM_LOAD     Load Path for the Environment-Model Weights (default:
                         None)
   --em-loss EM_LOSS     Specify the loss function for training the Env Model
@@ -146,12 +149,16 @@ optional arguments:
   --rew-coeff REW_COEFF
                         Specify the Predicted Reward Loss Coefficient
                         (default: 1.0)
-  --vae-arch VAE_ARCH   Specify the VAE model architecture (default: None)
-  --vae-arch-help       Show the help dialouge to generate a vae arch string
-                        (default: False)
+  --vae-arch VAE_ARCH   Specify the VAE model architecture [Look at --arch-
+                        help] (default: c2d:32:3:1_c2d:64:3:1_c2d:128:3:1_z:32
+                        :1024_c2dT:128:4:1_c2dT:6:3:3)
   --vae-load VAE_LOAD   Load Path for the Variational AutoEncoder Weights
                         (default: None)
   --kl-coeff KL_COEFF   Specify the KL-Divergence Coefficient (default: 0.5)
+  --i2a-arch I2A_ARCH   Specify the I2A policy architecture [Look at --arch-
+                        help] (default: NULL)
+  --i2a-load I2A_LOAD   Load Path for the Imagination-Augmented Agents Weights
+                        (default: None)
   --exp-root EXP_ROOT   Set the root path for all experiments (default:
                         ./experiments/)
   --exppath             Return the experiment folder under the specified
@@ -162,6 +169,8 @@ optional arguments:
   --cpu CPU             Set the number of cpu cores available (default: 16)
   --no-override         Prevent loading arguments to override default settings
                         (default: False)
+  --arch-help           Show the help dialogue for constructing model
+                        architectures (default: False)
 ```
 
 Miscellaneous Utilities
@@ -186,7 +195,7 @@ Just a script to unmount the Google Cloud FUSE mentioned earlier.
 Acknowledgements
 ----------------
 
-Mentored by [KyoungmanLee][nomoreid], Game Contents AI Team Member at
+Mentored by [Kyoungmanlee][nomoreid], Game Contents AI Team Member at
 [Netmarble][netmarble].
 
 This was supported by [Deep Learning Camp Jeju 2018][jejudlcampwebsite]
@@ -207,4 +216,3 @@ which was organized by [TensorFlow Korea User Group][tfkorea].
 [env-model]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/env_model.png
 [full-i2a]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/full_i2a.png
 [imagine-core]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/imagine.png
-
