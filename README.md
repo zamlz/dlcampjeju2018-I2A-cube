@@ -183,12 +183,24 @@ Google's Cloud Storage FUSE can be found [here][gcp-fuse-details].
 
 Just a script to unmount the Google Cloud FUSE mentioned earlier.
 
+Acknowledgements
+----------------
+
+Mentored by [KyoungmanLee][nomoreid], Game Contents AI Team Member at
+[Netmarble][netmarble].
+
+This was supported by [Deep Learning Camp Jeju 2018][jejudlcampwebsite]
+which was organized by [TensorFlow Korea User Group][tfkorea].
 
 [i2a-paper]: https://arxiv.org/abs/1707.06203v2
 
 [gcp-bucket]: https://cloud.google.com/storage/
 [gcp-fuse]: https://github.com/GoogleCloudPlatform/gcsfuse/
 [gcp-fuse-details]: https://cloud.google.com/storage/docs/gcs-fuse
+[jejudlcampwebsite]: http://jeju.dlcamp.org/2018/
+[tfkorea]: https://facebook.com/groups/TensorFlowKR/
+[nomoreid]: https://github.com/nomoreid
+[netmarble]: http://www.netmarble.net/
 
 [miscfolder]: https://github.com/zamlz/dlcampjeju2018-I2A-cube/tree/master/misc
 [cube-gif]: https://raw.githubusercontent.com/zamlz/dlcampjeju2018-I2A-cube/master/docs/pics/cube_solve.gif
